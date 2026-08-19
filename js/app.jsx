@@ -1,29 +1,33 @@
 /**
- * SafeRoute Guardian - Main Application Root Component
- * Coordinates the 5-role workspaces, Tourist Safety Intelligence, Community Reviews,
- * live corridor telemetry, explainable AI Risk Engine, and emergency protocols.
+ * SafeRoute Guardian - Main Application Coordinator
+ * Implements Firebase Authentication, 3-Role Workspace Isolation,
+ * Multi-Step Onboarding, Route Guards, Explainable AI Risk Engine, and Emergency Protocols.
  */
 
 window.App = function() {
-  const [session, setSession] = React.useState(() => {
-    try { return JSON.parse(localStorage.getItem('srg_demo_session_v1')) || null; } catch (e) { return null; }
+  // 1. Firebase Authentication & User Profile State
+  const [currentUser, setCurrentUser] = React.useState(() => {
+    return window.FirebaseService ? window.FirebaseService.getCurrentUser() : null;
   });
-  // Scenarios and active selection
+  const [userProfile, setUserProfile] = React.useState(null);
+  const [authLoading, setAuthLoading] = React.useState(true);
+  const [showOnboarding, setShowOnboarding] = React.useState(false);
+
+  // 2. Scenarios and Active Journey Selection
   const [scenarios, setScenarios] = React.useState(() => window.StorageService.getRoutes());
   const [activeScenario, setActiveScenario] = React.useState(() => scenarios[0]);
 
-  // Navigation State
-  // currentView: 'landing' (5 roles screen) | 'workspace' (feature cards hub) | 'tool' (specific dashboard/tool)
-  const [currentView, setCurrentView] = React.useState(() => session ? 'workspace' : 'login');
-  const [currentRole, setCurrentRole] = React.useState(() => {
-    try { return localStorage.getItem('srg_selected_role_v1') || 'tourist'; } catch (e) { return 'tourist'; }
-  }); // 'tourist' | 'parent' | 'organization' | 'admin' | 'traveler'
-  const [activeTool, setActiveTool] = React.useState(null); // specific tool id (e.g. 'explore-safely', 'community-reviews', etc.)
+  // 3. Navigation State (3 Top-Level Roles)
+  // currentView: 'landing' (3 workspace selector) | 'workspace' (feature cards hub) | 'tool' (specific feature/dashboard)
+  const [currentView, setCurrentView] = React.useState('landing');
+  const [currentRole, setCurrentRole] = React.useState('tourist'); // 'tourist' | 'parent' | 'organization'
+  const [orgPermission, setOrgPermission] = React.useState('staff'); // 'staff' | 'admin'
+  const [activeTool, setActiveTool] = React.useState(null);
 
-  // Audio mute state
+  // 4. Audio Mute State
   const [isMuted, setIsMuted] = React.useState(false);
 
-  // Position and Journey State
+  // 5. Position & Journey State
   const [currentPos, setCurrentPos] = React.useState(() => activeScenario.demoWaypoints.safe);
   const [journeyState, setJourneyState] = React.useState({
     stage: 'ON_ROUTE',
@@ -36,12 +40,12 @@ window.App = function() {
     isTestEmergency: false
   });
 
-  // Escalation Countdown (Default 15 minutes = 900 seconds)
+  // 6. Escalation Countdown (Default 15 minutes = 900 seconds)
   const [countdownSeconds, setCountdownSeconds] = React.useState(900);
   const [isFastForwarding, setIsFastForwarding] = React.useState(false);
   const [showDeviationModal, setShowDeviationModal] = React.useState(false);
 
-  // Alerts, Contacts, Reviews & Toasts
+  // 7. Alerts, Contacts, Reviews, Help Requests & Safe Beacon
   const [alerts, setAlerts] = React.useState(() => window.StorageService.getAlerts());
   const [contacts, setContacts] = React.useState(() => window.StorageService.getContacts(activeScenario.id));
   const [communityReviews, setCommunityReviews] = React.useState(() => window.StorageService.getCommunityReviews());
@@ -51,12 +55,12 @@ window.App = function() {
   const [journeyTimeline, setJourneyTimeline] = React.useState(() => window.StorageService.getJourneyTimeline());
   const [toasts, setToasts] = React.useState([]);
 
-  // Device Motion State
+  // 8. Device Motion Hardware State
   const [motionStatus, setMotionStatus] = React.useState(() => window.MotionService.getStatus());
 
   // Toast Helper
   const addToast = (title, message, type = 'info') => {
-    const id = 'toast-' + Date.now() + Math.random();
+    const id = 'toast-' + Date.now() + Math.random().toString(36).substring(2, 6);
     setToasts(prev => [...prev, { id, title, message, type }]);
     setTimeout(() => {
       setToasts(prev => prev.filter(t => t.id !== id));
@@ -72,10 +76,58 @@ window.App = function() {
     setJourneyTimeline(prev => [event, ...prev]);
   };
 
+  // Auth State Listener
+  React.useEffect(() => {
+    if (!window.FirebaseService) {
+      setAuthLoading(false);
+      return;
+    }
+
+    const unsubscribe = window.FirebaseService.onAuthStateChanged(async (user) => {
+      setCurrentUser(user);
+      if (user) {
+        // Load user profile from Firestore or local fallback
+        const profile = await window.FirebaseService.getUserProfile(user.uid);
+        setUserProfile(profile);
+
+        if (profile) {
+          if (profile.primaryRole) setCurrentRole(profile.primaryRole);
+          if (profile.orgPermission) setOrgPermission(profile.orgPermission);
+          if (profile.onboardingComplete === false) {
+            setShowOnboarding(true);
+          } else {
+            setShowOnboarding(false);
+          }
+        } else if (!user.onboardingComplete) {
+          setShowOnboarding(true);
+        }
+      } else {
+        setUserProfile(null);
+        setShowOnboarding(false);
+      }
+      setAuthLoading(false);
+    });
+
+    return () => {
+      if (typeof unsubscribe === 'function') unsubscribe();
+    };
+  }, []);
+
+  // Safe Beacon Sync on Network Status Change
   React.useEffect(() => {
     if (networkStatus === 'LIMITED' || networkStatus === 'OFFLINE') {
-      const beacon = { travelerName: activeScenario.travelerName, location: currentPos, timestamp: new Date().toISOString(), battery: 68, destination: activeScenario.destinationName, routeStatus: journeyState.stage, riskScore: riskData.score, networkStatus };
-      window.StorageService.saveSafeBeacon(beacon); setSafeBeacon(beacon);
+      const beacon = {
+        travelerName: activeScenario.travelerName,
+        location: currentPos,
+        timestamp: new Date().toISOString(),
+        battery: 76,
+        destination: activeScenario.destinationName,
+        routeStatus: journeyState.stage,
+        riskScore: riskData.score,
+        networkStatus
+      };
+      window.StorageService.saveSafeBeacon(beacon);
+      setSafeBeacon(beacon);
       recordTimeline('SAFE_BEACON_SAVED', `Safe Beacon saved while network is ${networkStatus.toLowerCase()}.`, 'warning');
     }
   }, [networkStatus]);
@@ -83,11 +135,16 @@ window.App = function() {
   const handleSetNetworkStatus = (nextStatus) => {
     const hadBeacon = !!safeBeacon;
     setNetworkStatus(nextStatus);
-    recordTimeline('NETWORK_STATUS', `Network changed to ${nextStatus} (Demo / Simulated).`, nextStatus === 'STRONG' ? 'safe' : 'warning');
-    if (nextStatus === 'STRONG' && hadBeacon) { addToast('Safe Beacon synced', 'Last known location received by the safety console.', 'success'); recordTimeline('SAFE_BEACON_SYNCED', 'Safe Beacon synced: last known location received.', 'safe'); window.StorageService.clearSafeBeacon(); setSafeBeacon(null); }
+    recordTimeline('NETWORK_STATUS', `Network connectivity changed to ${nextStatus} (Demo / Simulated).`, nextStatus === 'STRONG' ? 'safe' : 'warning');
+    if (nextStatus === 'STRONG' && hadBeacon) {
+      addToast('Safe Beacon Synced', 'Last known safe location successfully transmitted to safety console.', 'success');
+      recordTimeline('SAFE_BEACON_SYNCED', 'Safe Beacon synced: last known location received.', 'safe');
+      window.StorageService.clearSafeBeacon();
+      setSafeBeacon(null);
+    }
   };
 
-  // Sync contacts & waypoints on scenario change
+  // Switch Active Scenario
   const handleSelectScenario = (sc) => {
     setActiveScenario(sc);
     setCurrentPos(sc.demoWaypoints.safe);
@@ -104,11 +161,11 @@ window.App = function() {
     setCountdownSeconds(sc.escalationTimeoutMinutes * 60);
     setShowDeviationModal(false);
     setContacts(window.StorageService.getContacts(sc.id));
-    addToast('Persona Activated', `Switched to ${sc.travelerName} (${sc.routeName})`, 'info');
-    recordTimeline('JOURNEY_STARTED', `${sc.travelerName} began monitored travel to ${sc.destinationName}.`, 'safe');
+    addToast('Persona Activated', `Switched active journey to ${sc.travelerName} (${sc.routeName})`, 'info');
+    recordTimeline('JOURNEY_STARTED', `${sc.travelerName} began monitored travel along approved corridor to ${sc.destinationName}.`, 'safe');
   };
 
-  // 1. Calculate AI Safety Risk Score
+  // Calculate Explainable AI Safety Risk Score (0 - 100)
   const riskData = React.useMemo(() => {
     return window.RiskEngine.assessRisk({
       travelerName: activeScenario.travelerName,
@@ -124,13 +181,7 @@ window.App = function() {
     });
   }, [activeScenario, currentPos, journeyState]);
 
-  React.useEffect(() => {
-    if (window.StorageService.getJourneyTimeline().length === 0) {
-      recordTimeline('JOURNEY_STARTED', `${activeScenario.travelerName} began monitored travel to ${activeScenario.destinationName}.`, 'safe');
-    }
-  }, []);
-
-  // 2. Initialize DeviceMotion Service
+  // Initialize DeviceMotion hardware listener
   React.useEffect(() => {
     window.MotionService.init({
       onEmergency: () => {
@@ -146,7 +197,7 @@ window.App = function() {
     };
   }, []);
 
-  // 3. Countdown & Time-off-route Loop
+  // Countdown & Time-Off-Route Timer Loop
   React.useEffect(() => {
     let interval = null;
 
@@ -166,7 +217,7 @@ window.App = function() {
           }
           return next;
         });
-      }, isFastForwarding ? 1000 : 1000);
+      }, 1000);
     } else if (riskData.distanceOffCorridor > 0 && !journeyState.isSosActive) {
       interval = setInterval(() => {
         setJourneyState(prev => ({
@@ -181,24 +232,46 @@ window.App = function() {
     };
   }, [journeyState.checkinStatus, journeyState.isSosActive, riskData.distanceOffCorridor, isFastForwarding]);
 
-  // Navigation handlers
+  // Auth Handler from LoginPortal
+  const handleAuthSuccess = (user) => {
+    setCurrentUser(user);
+    if (!user.onboardingComplete) {
+      setShowOnboarding(true);
+    } else {
+      if (user.primaryRole) setCurrentRole(user.primaryRole);
+      if (user.orgPermission) setOrgPermission(user.orgPermission);
+      setCurrentView('workspace');
+      addToast('Secure Session Established', `Welcome back, ${user.displayName || 'Traveler'}!`, 'success');
+    }
+  };
+
+  const handleCompleteOnboarding = (role) => {
+    setCurrentRole(role);
+    setShowOnboarding(false);
+    setCurrentView('workspace');
+    addToast('Onboarding Complete', `Your ${role.toUpperCase()} safety workspace is ready.`, 'success');
+  };
+
+  const handleLogout = async () => {
+    await window.FirebaseService.signOutUser();
+    setCurrentUser(null);
+    setUserProfile(null);
+    setCurrentView('landing');
+    setActiveTool(null);
+    addToast('Logged Out', 'You have been securely signed out.', 'info');
+  };
+
+  // Workspace Navigation Handlers
   const handleSelectRoleFromLanding = (roleId) => {
     setCurrentRole(roleId);
-    localStorage.setItem('srg_selected_role_v1', roleId);
-    setCurrentView('workspace'); // open role workspace feature cards
+    setCurrentView('workspace');
     addToast('Workspace Opened', `Entered ${roleId.toUpperCase()} workspace. Select a feature card to launch.`, 'info');
   };
 
-  const handleLogin = (name) => {
-    const nextSession = { name, loggedInAt: new Date().toISOString() };
-    localStorage.setItem('srg_demo_session_v1', JSON.stringify(nextSession));
-    setSession(nextSession);
+  const handleSwitchRole = () => {
     setCurrentView('landing');
+    setActiveTool(null);
   };
-
-  const handleSwitchRole = () => { setCurrentView('landing'); setActiveTool(null); };
-  const handleLogout = () => { localStorage.removeItem('srg_demo_session_v1'); setSession(null); setActiveTool(null); setCurrentView('login'); };
-  const handleRoleNavigate = (toolId) => { setActiveTool(toolId); setCurrentView('tool'); };
 
   const handleBackToRoles = () => {
     setCurrentView('landing');
@@ -210,13 +283,18 @@ window.App = function() {
     setActiveTool(null);
   };
 
+  const handleRoleNavigate = (toolId) => {
+    setActiveTool(toolId);
+    setCurrentView('tool');
+  };
+
   const handleLaunchFeature = (roleId, featureId) => {
     setCurrentRole(roleId);
     setActiveTool(featureId);
     setCurrentView('tool');
   };
 
-  // Direct shortcuts
+  // Shortcuts
   const handleOpenExploreSafely = () => {
     setCurrentRole('tourist');
     setActiveTool('explore-safely');
@@ -235,7 +313,7 @@ window.App = function() {
     setCurrentView('tool');
   };
 
-  // Trigger Emergency Protocol
+  // Emergency Trigger Protocol
   const handleTriggerSos = (source = 'MANUAL_SOS', isSilentTest = false) => {
     setJourneyState(prev => ({
       ...prev,
@@ -253,14 +331,14 @@ window.App = function() {
       travelerName: activeScenario.travelerName,
       type: 'SOS_EMERGENCY',
       severity: 'emergency',
-      message: `[Demo / Simulated] CRITICAL: ${activeScenario.travelerName} activated Emergency Protocol via ${source}. Broadcasted to guardian & local dispatch.`,
+      message: `[Demo / Simulated] CRITICAL: ${activeScenario.travelerName} activated Emergency Protocol via ${source}. Dispatched to guardian & CAD gateway.`,
       status: 'ACTIVE',
       resolvedBy: null
     });
     setAlerts(prev => [newAlert, ...prev]);
-    recordTimeline('SOS_ACTIVATED', `Emergency protocol activated via ${source}. ${safeBeacon ? 'Latest Safe Beacon location attached.' : 'Live location attached.'}`, 'emergency');
+    recordTimeline('SOS_ACTIVATED', `Emergency protocol activated via ${source}. ${safeBeacon ? 'Latest Safe Beacon coordinates attached.' : 'Live GPS coordinates attached.'}`, 'emergency');
 
-    addToast('EMERGENCY ACTIVATED (Simulated)', `SOS broadcast sent to ${activeScenario.guardianName} and safety console!`, 'emergency');
+    addToast('EMERGENCY ACTIVATED (Simulated)', `SOS broadcast dispatched to ${activeScenario.guardianName} and safety console!`, 'emergency');
   };
 
   // Timeout Escalation Trigger
@@ -282,7 +360,7 @@ window.App = function() {
       travelerName: activeScenario.travelerName,
       type: 'TIMEOUT_ESCALATION',
       severity: 'emergency',
-      message: `[Demo / Simulated] UNRESPONSIVE ESCALATION: ${activeScenario.travelerName} did not respond within ${activeScenario.escalationTimeoutMinutes}m. Emergency services dispatched.`,
+      message: `[Demo / Simulated] UNRESPONSIVE ESCALATION: ${activeScenario.travelerName} did not respond within ${activeScenario.escalationTimeoutMinutes}m. Dispatched emergency network.`,
       status: 'ACTIVE',
       resolvedBy: null
     });
@@ -318,10 +396,10 @@ window.App = function() {
     setAlerts(prev => [newAlert, ...prev]);
     recordTimeline('EMERGENCY_CANCELLED', reason, 'safe');
 
-    addToast('Emergency Cancelled', 'Safety alarm deactivated and safety network notified of cancellation.', 'success');
+    addToast('Emergency Cancelled', 'Safety siren stopped and safety network notified of cancellation.', 'success');
   };
 
-  // Traveler "I'm Safe" acknowledgment
+  // "I'm Safe" Acknowledgment
   const handleAcknowledgeSafe = () => {
     if (window.AudioService) {
       window.AudioService.playSafeConfirmation();
@@ -478,16 +556,79 @@ window.App = function() {
     setLocalHelpRequests(prev => prev.map(request => request.id === requestId ? updated : request));
   };
 
-  // Helper to render the active tool/dashboard view
+  // Helper to render the active tool/dashboard view with Route Guards
   const renderActiveToolView = () => {
+    // Check permission rules:
+    // Tourists cannot access admin-users, org-command, org-members, guardian-home
+    const adminOnlyTools = ['admin-users', 'org-members', 'admin-routes', 'admin-contacts', 'admin-ai-engine', 'admin-demo-controls'];
+    const parentOnlyTools = ['guardian-home', 'parent-link-dependent'];
+    const orgOnlyTools = ['org-home', 'org-monitor', 'org-reports', 'org-incident-log', 'org-contacts', ...adminOnlyTools];
+
+    if (currentRole === 'tourist' && (orgOnlyTools.includes(activeTool) || parentOnlyTools.includes(activeTool))) {
+      return (
+        <window.AccessDenied
+          currentRole="tourist"
+          requiredRole="Parent / Guardian or Organization"
+          onReturnHome={handleBackToWorkspace}
+        />
+      );
+    }
+
+    if (currentRole === 'parent' && orgOnlyTools.includes(activeTool)) {
+      return (
+        <window.AccessDenied
+          currentRole="parent"
+          requiredRole="Organization Administrator or Staff"
+          onReturnHome={handleBackToWorkspace}
+        />
+      );
+    }
+
+    if (currentRole === 'organization' && orgPermission === 'staff' && adminOnlyTools.includes(activeTool)) {
+      return (
+        <window.AccessDenied
+          currentRole="organization staff"
+          requiredRole="Organization Administrator"
+          onReturnHome={handleBackToWorkspace}
+        />
+      );
+    }
+
+    // Full Screen Maps
     const fullMapTools = ['live-map', 'traveler-live-map', 'org-monitor', 'org-full-map', 'admin-full-map', 'admin-monitor'];
-    const focusedPages = ['tourist-home', 'route-safety', 'guardian-home', 'safe-beacon', 'org-home', 'org-reports', 'admin-users', 'local-help-monitor', 'helper-verification', 'settings', 'trusted-safe-spots', 'journey-timeline'];
     if (fullMapTools.includes(activeTool)) {
-      return <window.FullScreenMap title={activeTool === 'live-map' ? 'Live Map Monitor' : activeTool === 'traveler-live-map' ? 'My Live Journey Map' : activeTool === 'admin-full-map' ? 'Full-Screen Monitoring Map' : 'Group Safety Monitoring Map'} activeScenario={activeScenario} riskData={riskData} currentPos={currentPos} journeyState={journeyState} safeBeacon={safeBeacon} onBack={handleBackToWorkspace} onTriggerSos={handleTriggerSos} />;
+      return (
+        <window.FullScreenMap
+          title={activeTool === 'live-map' ? 'Live Dependent Route Map' : activeTool === 'traveler-live-map' ? 'My Live Journey Map' : 'Group Safety Monitoring Map'}
+          activeScenario={activeScenario}
+          riskData={riskData}
+          currentPos={currentPos}
+          journeyState={journeyState}
+          safeBeacon={safeBeacon}
+          onBack={handleBackToWorkspace}
+          onTriggerSos={handleTriggerSos}
+        />
+      );
     }
+
+    // Focused Pages
+    const focusedPages = ['tourist-home', 'route-safety', 'guardian-home', 'safe-beacon', 'org-home', 'org-reports', 'admin-users', 'local-help-monitor', 'helper-verification', 'settings', 'trusted-safe-spots', 'journey-timeline'];
     if (focusedPages.includes(activeTool)) {
-      return <window.RoleFeaturePage tool={activeTool} roleId={currentRole} activeScenario={activeScenario} riskData={riskData} safeBeacon={safeBeacon} timeline={journeyTimeline} onBack={handleBackToWorkspace} onOpen={handleRoleNavigate} />;
+      return (
+        <window.RoleFeaturePage 
+          tool={activeTool}
+          roleId={currentRole}
+          orgPermission={orgPermission}
+          activeScenario={activeScenario}
+          riskData={riskData}
+          safeBeacon={safeBeacon}
+          timeline={journeyTimeline}
+          onBack={handleBackToWorkspace}
+          onOpen={handleRoleNavigate}
+        />
+      );
     }
+
     // 1. Explore Safely View
     if (activeTool === 'explore-safely') {
       return (
@@ -512,6 +653,7 @@ window.App = function() {
       );
     }
 
+    // 3. Local Help Network
     if (activeTool === 'local-help') {
       return (
         <window.LocalHelpNetwork
@@ -526,8 +668,8 @@ window.App = function() {
       );
     }
 
-    // 3. User / Traveler Tools
-    if (currentRole === 'traveler' || activeTool === 'tourist-journey' || activeTool === 'tourist-sos' || activeTool === 'traveler-start' || activeTool === 'traveler-live-status' || activeTool === 'traveler-checkin' || activeTool === 'traveler-sos' || activeTool === 'traveler-shake' || activeTool === 'traveler-home' || activeTool === 'traveler-status') {
+    // 4. Tourist / Traveler Journey Dashboard
+    if (currentRole === 'tourist' || activeTool === 'tourist-journey' || activeTool === 'tourist-sos' || activeTool === 'traveler-status') {
       return (
         <window.UserDashboard 
           roleId={currentRole}
@@ -551,18 +693,20 @@ window.App = function() {
       );
     }
 
-    // 4. Admin / Organization / Parent Tools
+    // 5. Parent / Organization Command Center
     let initialTab = 'monitor';
     if (activeTool === 'admin-routes' || activeTool === 'org-routes') initialTab = 'routes';
     else if (activeTool === 'alerts-feed' || activeTool === 'org-incident-log') initialTab = 'alerts';
     else if (activeTool === 'guardian-contacts' || activeTool === 'admin-contacts' || activeTool === 'org-contacts') initialTab = 'contacts';
     else if (activeTool === 'admin-ai-engine') initialTab = 'ai-engine';
     else if (activeTool === 'local-help-monitor') initialTab = 'local-help';
+    else if (activeTool === 'admin-users') initialTab = 'members';
 
     return (
       <window.AdminDashboard 
         initialTab={initialTab}
         roleId={currentRole}
+        orgPermission={orgPermission}
         onBackToWorkspace={handleBackToWorkspace}
         activeScenario={activeScenario}
         scenarios={scenarios}
@@ -584,60 +728,96 @@ window.App = function() {
     );
   };
 
-  if (!session) {
-    return <window.LoginPortal onLogin={handleLogin} />;
+  // If not authenticated, render LoginPortal
+  if (authLoading) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', color: '#94A3B8', fontFamily: 'sans-serif' }}>
+        <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>🛡️</div>
+        <h2 style={{ color: '#FFFFFF', marginBottom: '0.5rem' }}>SafeRoute Guardian</h2>
+        <p style={{ fontSize: '0.9rem' }}>Authenticating safety session...</p>
+      </div>
+    );
+  }
+
+  if (!currentUser) {
+    return <window.LoginPortal onAuthSuccess={handleAuthSuccess} />;
   }
 
   return (
     <div className="srg-app-shell">
-      {currentView !== 'landing' && <window.RoleNavigation roleId={currentRole} activeTool={activeTool} onNavigate={handleRoleNavigate} onSwitchRole={handleSwitchRole} onLogout={handleLogout} profileName={session.name} />}
+      {/* Role-Guarded Navigation Sidebar */}
+      {currentView !== 'landing' && (
+        <window.RoleNavigation 
+          roleId={currentRole}
+          orgPermission={orgPermission}
+          activeTool={activeTool}
+          onNavigate={handleRoleNavigate}
+          onSwitchRole={handleSwitchRole}
+          onLogout={handleLogout}
+          profileName={currentUser.displayName || currentUser.email || 'Traveler'}
+          userEmail={currentUser.email}
+        />
+      )}
+
       <div className={currentView !== 'landing' ? 'srg-app-content' : 'srg-app-content srg-role-select-content'}>
-      {/* Global Navigation Header */}
-      <window.Header 
-        currentView={currentView}
-        currentRole={currentRole}
-        activeTool={activeTool}
-        onSelectRole={setCurrentRole}
-        onBackToRoles={handleBackToRoles}
-        onOpenExploreSafely={handleOpenExploreSafely}
-        onOpenCommunityReviews={handleOpenCommunityReviews}
-        onOpenLocalHelp={handleOpenLocalHelp}
-        activeScenario={activeScenario}
-        scenarios={scenarios}
-        onSelectScenario={handleSelectScenario}
-        safetyScore={riskData.score}
-        safetyLevel={riskData.level}
-        isMuted={isMuted}
-        onToggleMute={handleToggleMute}
-      />
+        {/* Global Navigation Header */}
+        <window.Header 
+          currentView={currentView}
+          currentRole={currentRole}
+          orgPermission={orgPermission}
+          activeTool={activeTool}
+          onSelectRole={setCurrentRole}
+          onBackToRoles={handleBackToRoles}
+          onOpenExploreSafely={handleOpenExploreSafely}
+          onOpenCommunityReviews={handleOpenCommunityReviews}
+          onOpenLocalHelp={handleOpenLocalHelp}
+          activeScenario={activeScenario}
+          scenarios={scenarios}
+          onSelectScenario={handleSelectScenario}
+          safetyScore={riskData.score}
+          safetyLevel={riskData.level}
+          isMuted={isMuted}
+          onToggleMute={handleToggleMute}
+          currentUser={currentUser}
+        />
 
-      {/* Main App Container */}
-      <main className="srg-main-container">
-        {/* Screen 1: First Login / 5-Role Selection Interface */}
-        {currentView === 'landing' && (
-          <window.LandingSection 
-            onSelectRole={handleSelectRoleFromLanding}
-            scenarios={scenarios}
-            activeScenario={activeScenario}
-            onSelectScenario={handleSelectScenario}
-          />
-        )}
+        {/* Main App Container */}
+        <main className="srg-main-container">
+          {/* Screen 1: 3-Workspace Selection Interface */}
+          {currentView === 'landing' && (
+            <window.LandingSection 
+              onSelectRole={handleSelectRoleFromLanding}
+              scenarios={scenarios}
+              activeScenario={activeScenario}
+              onSelectScenario={handleSelectScenario}
+              currentUser={currentUser}
+            />
+          )}
 
-        {/* Screen 2: Role Workspace Hub (Feature Cards Grid) */}
-        {currentView === 'workspace' && (
-          <window.RoleWorkspace 
-            roleId={currentRole}
-            onBackToRoles={handleBackToRoles}
-            onLaunchFeature={handleLaunchFeature}
-            activeScenario={activeScenario}
-            riskData={riskData}
-          />
-        )}
+          {/* Screen 2: Role Workspace Hub (Feature Cards Grid) */}
+          {currentView === 'workspace' && (
+            <window.RoleWorkspace 
+              roleId={currentRole}
+              orgPermission={orgPermission}
+              onBackToRoles={handleBackToRoles}
+              onLaunchFeature={handleLaunchFeature}
+              activeScenario={activeScenario}
+              riskData={riskData}
+            />
+          )}
 
-        {/* Screen 3: Specific Dashboard or Intelligence Tool */}
-        {currentView === 'tool' && renderActiveToolView()}
-      </main>
+          {/* Screen 3: Specific Dashboard or Intelligence Tool */}
+          {currentView === 'tool' && renderActiveToolView()}
+        </main>
       </div>
+
+      {/* Onboarding Modal for First-Time Setup */}
+      {showOnboarding && currentUser && (
+        <window.OnboardingModal
+          user={currentUser}
+          onCompleteOnboarding={handleCompleteOnboarding}
+        />
+      )}
 
       {/* Full-screen Emergency Overlay when SOS / Escalation is active */}
       {journeyState.isSosActive && (
@@ -651,7 +831,7 @@ window.App = function() {
         />
       )}
 
-      {/* Deviation Check-in Modal with 15m Countdown and 20s Fast-Forward */}
+      {/* Deviation Check-in Modal with 15m Countdown and Fast-Forward Demo */}
       {showDeviationModal && !journeyState.isSosActive && (
         <window.DeviationModal 
           activeScenario={activeScenario}

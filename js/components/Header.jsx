@@ -1,11 +1,13 @@
 /**
  * SafeRoute Guardian - Header & Top Navigation Component
- * Supports 5-role workspaces, back navigation, Explore Safely, Community Reviews, and live status pill.
+ * Supports 3-role navigation, scenario switcher, live safety risk score pill,
+ * audio mute control, and auth status display.
  */
 
 window.Header = function({
-  currentView = 'landing', // 'landing' | 'workspace' | 'tool'
+  currentView = 'landing',
   currentRole = 'tourist',
+  orgPermission = 'staff',
   activeTool = null,
   onSelectRole,
   onBackToRoles,
@@ -18,17 +20,28 @@ window.Header = function({
   safetyScore = 0,
   safetyLevel = { key: 'SAFE', label: 'Safe', color: '#10B981' },
   isMuted = false,
-  onToggleMute
+  onToggleMute,
+  currentUser
 }) {
   const currentRoleMeta = (window.SRG_DATA.roles || []).find(r => r.id === currentRole) || {
     title: 'Workspace',
     icon: '🛡️'
   };
 
+  const roleLabel = currentRole === 'organization'
+    ? (orgPermission === 'admin' ? 'Org Admin' : 'Org Staff')
+    : currentRoleMeta.title;
+
   return (
     <header className="srg-header">
       {/* Brand & Logo */}
-      <button type="button" className="srg-brand" onClick={onBackToRoles} title="Return to Role Selection Screen" aria-label="SafeRoute Guardian home">
+      <button
+        type="button"
+        className="srg-brand"
+        onClick={onBackToRoles}
+        title="Return to Workspace Selection Screen"
+        aria-label="SafeRoute Guardian home"
+      >
         <div className="srg-logo-shield">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
@@ -45,30 +58,35 @@ window.Header = function({
       <nav className="srg-nav-center">
         {currentView !== 'landing' ? (
           <button 
+            type="button"
             className="srg-role-btn active"
             onClick={onBackToRoles}
-            title="Return to 5-account selection screen"
+            title="Return to 3-workspace selection screen"
             style={{ fontSize: '0.82rem', padding: '0.4rem 0.85rem' }}
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-            <span>Roles</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="19" y1="12" x2="5" y2="12"/>
+              <polyline points="12 19 5 12 12 5"/>
+            </svg>
+            <span>Workspaces</span>
           </button>
         ) : null}
 
         {currentView === 'workspace' && (
           <span className="srg-nav-context" aria-current="page">
-            {currentRoleMeta.icon} {currentRoleMeta.title}
+            {currentRoleMeta.icon} {roleLabel}
           </span>
         )}
 
         {currentView === 'tool' && (
           <span className="srg-nav-context" aria-current="page">
-            {currentRoleMeta.icon} {activeTool ? 'Feature open' : 'Dashboard'}
+            {currentRoleMeta.icon} {activeTool ? activeTool.replace(/-/g, ' ') : 'Dashboard'}
           </span>
         )}
 
-        {/* Explore Safely shortcut */}
+        {/* Tourist Intelligence Shortcuts */}
         <button 
+          type="button"
           className="srg-role-btn"
           onClick={onOpenExploreSafely}
           title="Tourist Safety Intelligence (Weather, Connectivity, Advisories)"
@@ -78,8 +96,8 @@ window.Header = function({
           <span>Explore Safely</span>
         </button>
 
-        {/* Community Reviews shortcut */}
         <button 
+          type="button"
           className="srg-role-btn"
           onClick={onOpenCommunityReviews}
           title="Crowdsourced Community Safety Reviews"
@@ -89,8 +107,15 @@ window.Header = function({
           <span>Community Reviews</span>
         </button>
 
-        <button className="srg-role-btn" onClick={onOpenLocalHelp} title="Verified local assistance for tourists" style={{ fontSize: '0.82rem', padding: '0.4rem 0.85rem' }}>
-          <span>🤝</span><span>Local Help</span>
+        <button
+          type="button"
+          className="srg-role-btn"
+          onClick={onOpenLocalHelp}
+          title="Verified local assistance network"
+          style={{ fontSize: '0.82rem', padding: '0.4rem 0.85rem' }}
+        >
+          <span>🤝</span>
+          <span>Local Help</span>
         </button>
       </nav>
 
@@ -101,45 +126,55 @@ window.Header = function({
           className="srg-scenario-select"
           value={activeScenario ? activeScenario.id : ''}
           onChange={(e) => {
-            const found = scenarios.find(s => s.id === e.target.value);
-            if (found && onSelectScenario) onSelectScenario(found);
+            const sc = scenarios.find(s => s.id === e.target.value);
+            if (sc) onSelectScenario(sc);
           }}
-          title="Select active traveler persona and route"
+          title="Select active travel scenario persona"
+          aria-label="Active traveler persona"
         >
           {scenarios.map(sc => (
             <option key={sc.id} value={sc.id}>
-              {sc.avatar} {sc.travelerName}
+              {sc.avatar} {sc.travelerName} ({sc.travelerRole})
             </option>
           ))}
         </select>
 
-        {/* Live Safety Status Pill */}
+        {/* Safety Score Status Pill */}
         <div 
           className="srg-status-pill"
-          style={{ 
-            background: safetyLevel.key === 'EMERGENCY' ? 'rgba(239, 68, 68, 0.25)' : 'rgba(30, 41, 59, 0.9)', 
-            border: `1px solid ${safetyLevel.color}`,
-            color: safetyLevel.color 
+          style={{
+            background: safetyLevel.bg || 'rgba(16, 185, 129, 0.15)',
+            borderColor: safetyLevel.border || '#10B981',
+            color: safetyLevel.color || '#10B981'
           }}
+          title={`AI Risk Score: ${safetyScore}/100 (${safetyLevel.label})`}
         >
           <span 
-            className={`srg-status-dot ${safetyLevel.key === 'EMERGENCY' ? 'srg-pulse' : ''}`} 
+            className={`srg-status-dot ${safetyLevel.key === 'EMERGENCY' ? 'srg-pulse' : ''}`}
             style={{ background: safetyLevel.color }}
           />
           <span>{safetyLevel.label} ({safetyScore})</span>
         </div>
 
-        {/* Sound Toggle Button */}
-        <button 
-          className="srg-icon-btn" 
+        {/* Audio Mute / Unmute Toggle */}
+        <button
+          type="button"
+          className={`srg-audio-toggle ${isMuted ? 'muted' : ''}`}
           onClick={onToggleMute}
-          title={isMuted ? "Unmute Audio (Emergency Siren & Alerts Enabled)" : "Mute Audio Alerts"}
-          style={{ color: isMuted ? '#94A3B8' : '#38BDF8' }}
+          title={isMuted ? 'Unmute Emergency Sirens & Sounds' : 'Mute Emergency Sirens & Sounds'}
+          aria-label="Toggle Siren Audio"
         >
           {isMuted ? (
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" x2="1" y1="1" y2="23"/></svg>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+              <line x1="23" y1="9" x2="17" y2="15"/>
+              <line x1="17" y1="9" x2="23" y2="15"/>
+            </svg>
           ) : (
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+              <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
+            </svg>
           )}
         </button>
       </div>

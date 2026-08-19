@@ -1,32 +1,83 @@
 # SafeRoute Guardian 🛡️
-> **AI-Assisted Corridor Protection & Real-Time Geofence Safety Platform**  
-> *Built with Google Antigravity*
+> **AI-Assisted Corridor Protection & Production Role-Based Safety Platform**  
+> *Engineered and Upgraded with Google Antigravity*
 
-SafeRoute Guardian is an intelligent safety platform engineered to protect travelers (students, solo tourists, elderly individuals, night-shift employees) as they journey along approved route corridors. The platform calculates explainable risk in real time, issues proactive in-app check-ins, and manages multi-channel emergency escalations with audio sirens, SOS panic triggers, and mobile shake gesture detection.
+SafeRoute Guardian is an intelligent safety platform engineered to protect travelers (solo tourists, students, elderly individuals, night-shift employees) along approved route corridors. The platform calculates explainable risk in real time, issues proactive in-app check-ins, provides tourist intelligence (weather, dead-zones, safer routes), and manages multi-channel emergency escalations with audio sirens, SOS panic triggers, and mobile shake gesture detection.
 
 ---
 
-## 🌟 Key Features & Capabilities
+## 🌟 3-Mode Role-Based Access Architecture
 
-### 1. Dual-Role Architecture
-- **Administrator Command Center**:
-  - **Live Map Monitor**: Interactive Leaflet map with OpenStreetMap displaying route polylines, safe corridor geofence buffers (e.g. 100m), real-time traveler markers, and deviation pins.
-  - **Safe Routes Manager**: Create and configure custom routes, adjust buffer corridor widths (50m–500m), set default escalation timeouts (15 minutes), and assign travelers.
-  - **Live Alerts & Audit Log**: Real-time chronological incident feed recording corridor breaches, check-in confirmations, SOS triggers, and cancellations.
-  - **Emergency Contacts & Safety Network**: Manage guardian details, campus safety dispatchers, and simulated CAD emergency broadcasts (SMS/Voice/911 CAD).
-  - **AI Risk Telemetry Panel**: Live breakdown of all 6 safety signals with transparent explainability text and weight contributions.
-  - **Demo Controls Panel**: Instant triggers for "Safe on Route", "Minor Deviation", "High Risk Drift", "Return to Corridor", "Fast-Forward Timeout", and "SOS Panic".
+SafeRoute Guardian features exactly three main user workspace modes with granular Role-Based Access Control (RBAC):
 
-- **Monitored Traveler (User) Mobile View**:
-  - **Large Safety Status Card**: Visual color-coded safety level (*Safe* [Teal], *Caution* [Amber], *High Risk* [Orange], *Emergency* [Red]).
-  - **Journey Telemetry**: Destination, ETA, speed, corridor distance offset, and active guidance tips.
-  - **Interactive Route Map**: Mobile-optimized corridor tracking.
-  - **"I'm Safe" Acknowledgment**: One-tap resolution to dismiss deviation check-ins and reset risk timers.
-  - **Emergency SOS System**:
-    - **Hold for 3 Seconds** SOS panic button with animated circular SVG progress ring and audio tick feedback.
-    - **DeviceMotion Shake Gesture**: Shake phone 3 times within 5 seconds to activate Emergency Protocol.
-    - **Shake Shortcut Status Badge**: Sensor permission indicator with fallback simulation button.
-    - **Test Emergency (Demo Mode)**: Silent test button for presentations without loud alarms.
+```
+                       ┌─────────────────────────────────────┐
+                       │     SafeRoute Guardian Platform     │
+                       └──────────────────┬──────────────────┘
+                                          │
+            ┌─────────────────────────────┼────────────────────────────┐
+            ▼                             ▼                            ▼
+   ┌─────────────────┐           ┌─────────────────┐          ┌─────────────────┐
+   │ 1. Tourist Mode │           │ 2. Parent Mode  │          │ 3. Organization │
+   └────────┬────────┘           └────────┬────────┘          └────────┬────────┘
+            │                             │                            │
+   • Explore Safely AI           • Linked Dependents Roster   ┌────────┴────────┐
+   • Weather & Dead-Zones        • Live Dependent Tracking    │                 │
+   • Community Reviews           • Deviation Alerts Feed      ▼                 ▼
+   • Trusted Safe Spots          • Family Emergency Network ┌───────────┐ ┌───────────┐
+   • Local Help Requests         • Incident Audit Timeline  │Org Staff  │ │Org Admin  │
+   • Live Journey Map                                       └─────┬─────┘ └─────┬─────┘
+   • SOS Hold & Shake Trigger                                     │             │
+   • Safe Beacon Offline Mode                      • Assigned Fleet • Command Center
+                                                   • Live Telemetry • User Roster
+                                                   • Incident Ack   • Route Editor
+                                                                    • AI Telemetry
+                                                                    • Sim Suite
+```
+
+### 1. Tourist Mode
+Tourists can access only their own account and personal safety data:
+- **Explore Safely Dashboard**: AI safety scores, live weather warnings, cellular dead-zone maps, and official advisories.
+- **Fastest vs. Safer Route Comparison**: Compare direct paths with well-lit, CCTV-monitored alternative corridors.
+- **Community Safety Reviews**: Crowdsourced safety ratings, lighting conditions, solo travel tags, and hazard reports.
+- **Trusted Safe Spots & Local Help Network**: Verified 24/7 safe havens and nearby volunteer assistance directory.
+- **Personal Live Journey Guidance**: GPS corridor tracking, destination ETA, and corridor guidance tips.
+- **Emergency SOS & Shake Shortcut**: 3-second hold panic button and DeviceMotion 3-shake hardware trigger.
+- **"I'm Safe" Check-In**: One-tap check-in resolution to dismiss deviation warnings.
+- **Safe Beacon Mode**: Offline last-known-safe-location beacon saved during limited connectivity.
+
+### 2. Parent / Guardian Mode
+Parents can access only their explicitly linked family members or dependents:
+- **Linked Dependents Dashboard**: View live travel status, risk score, and battery telemetry for linked children or elderly family members.
+- **Secure Dependent Linking**: Link family members through verified invite codes.
+- **Live Route & Corridor Monitor**: Real-time Leaflet tracking showing designated school or commute corridors and deviation alerts.
+- **Family Incident Timeline**: Chronological audit trail of check-ins, route movements, and safe beacon updates.
+- **Family Emergency Network**: Manage family safety contacts and school safety liaisons.
+
+### 3. Organization Mode (Schools, Tour Operators, Enterprises)
+Inside Organization mode, permissions are split into two distinct tiers:
+- **Organization User / Staff**:
+  - View only assigned travelers/groups and approved routes.
+  - Live map, risk scores, and telemetry for assigned travelers.
+  - Acknowledge and resolve incident alerts.
+- **Organization Administrator**:
+  - **Organization Command Center**: Fleet-wide metrics, active journey ratios, and operational telemetry.
+  - **Member & Staff Management**: Invite users, manage permissions (Admin vs Staff), and assign staff to travelers.
+  - **Route & Corridor Editor**: Configure approved waypoints, adjust corridor buffer widths (50m–500m), and set escalation timeouts.
+  - **Explainable AI Risk Engine Telemetry**: Real-time signal weight breakdown and formula inspection.
+  - **Emergency Simulation Suite**: Interactive triggers for Safe on Route, Minor Deviation, High Risk Drift, Return to Corridor, Fast-Forward Timeout, and SOS Panic.
+
+---
+
+## 🔐 Authentication & Zero-Trust Security
+
+SafeRoute Guardian integrates **Firebase Authentication** and **Cloud Firestore**:
+1. **Google OAuth ("Continue with Google")**: Official Google identity popup; never prompts for Gmail passwords directly.
+2. **Email & Password Authentication**: Secure registration, login, and password reset email flows.
+3. **Session Persistence**: React-driven `onAuthStateChanged` listener with persistent authenticated sessions.
+4. **Onboarding Flow**: Multi-step onboarding for first-time sign-ins with mode selection and role configuration.
+5. **Route Guards & Access Denied**: Unauthorized navigation items are hidden completely; direct navigation attempts render a friendly Access Denied page.
+6. **Zero-Breakage Dual Mode**: Automatically activates a secure local fallback if live Firebase credentials are not yet configured in `.env.local`.
 
 ---
 
@@ -36,11 +87,11 @@ SafeRoute Guardian computes a deterministic, explainable safety risk score from 
 
 | Factor | Weight | Description |
 | :--- | :---: | :--- |
-| **Corridor Geofence Offset** | $0 - 35\text{ pts}$ | Calculated geographic distance outside the approved safe buffer corridor |
+| **Corridor Geofence Offset** | $0 - 35\text{ pts}$ | Geographic distance outside the approved safe buffer corridor |
 | **Time Drift Outside Corridor** | $0 - 25\text{ pts}$ | Duration (seconds/minutes) spent off-route |
 | **Trajectory Vector Direction** | $0 - 15\text{ pts}$ | Heading towards vs moving farther away from the approved corridor |
 | **Time-of-Day Hazard** | $0 - 15\text{ pts}$ | Daylight vs late-night / low-visibility conditions |
-| **Safety Check-in Status** | $0 - 20\text{ pts}$ | Responsiveness to "Are you safe?" prompts |
+| **Safety Check-in Status** | $0 - 20\text{ pts}$ | Responsiveness to proactive "Are you safe?" prompts |
 | **Emergency SOS Override** | $\mathbf{100\text{ pts}}$ | Instant max score on SOS button press, shake gesture, or timeout |
 
 ### Safety Risk Levels:
@@ -49,18 +100,16 @@ SafeRoute Guardian computes a deterministic, explainable safety risk score from 
 - `60–79`: **High Risk** (Orange) — Significant drift; "Are you safe?" check-in prompt and admin alert triggered.
 - `80–100`: **Emergency** (Red) — Emergency Protocol activated; sirens sound and safety network alerted.
 
-> *Disclaimer: "AI-assisted risk assessment using contextual safety signals. This prototype provides safety assistance and should not replace emergency services. In an immediate emergency, call local emergency services."*
-
 ---
 
 ## 🚨 Emergency Protocol & Audio Siren
 
 When Emergency Protocol is activated:
 1. **Full-Screen Emergency Display**: Shows traveler identity, live GPS coordinates, route, and destination.
-2. **Dual-Tone Web Audio Siren**: Synthesized oscillating siren (dual-frequency modulation) with visual audio wave pulsation.
+2. **Dual-Tone Web Audio Siren**: Synthesized oscillating siren with visual audio wave pulsation.
 3. **Simulated Multi-Channel Broadcast**:
    - High-priority CAD dispatch to Local Authorities (911 / 112).
-   - SMS & Push alerts to Guardians (e.g. Priya Sharma).
+   - SMS & Push alerts to Guardians.
    - Real-time notification to School & Enterprise Safety Consoles.
 4. **Safety Cancellation**: **Hold for 5 seconds to Cancel Emergency** with cancel progress bar, preventing accidental deactivation while logging cancellation time.
 
@@ -68,10 +117,9 @@ When Emergency Protocol is activated:
 
 ## 🚀 How to Run Locally
 
-SafeRoute Guardian is built as a zero-dependency web app that runs directly in any modern browser without npm build steps or API keys.
+SafeRoute Guardian runs directly in modern browsers with zero build dependencies:
 
 ### Method 1: Python HTTP Server (Recommended)
-Open PowerShell or Terminal in the project directory:
 ```powershell
 python -m http.server 3000
 ```
@@ -81,40 +129,23 @@ http://localhost:3000
 ```
 
 ### Method 2: Direct File Launch
-Double click `index.html` in your file explorer to open it in Chrome, Edge, or Firefox.
+Open `index.html` directly in Chrome, Edge, or Firefox.
 
 ---
 
-## 🎬 Hackathon Demo Walkthrough (2-Minute Script)
+## 📚 Documentation & Setup Guides
 
-1. **Overview & Persona**:
-   - Open the app in **Overview** or **Administrator** mode.
-   - Note the active persona: *Aarav Sharma (Student Commute - Oakwood High to Central Youth Center)*.
-2. **Normal Journey**:
-   - Point out the electric blue approved route and the transparent blue 100m corridor buffer on the Leaflet map.
-   - Status shows `Safe (0/100)`.
-3. **Trigger Minor Deviation**:
-   - Click `🟡 Minor Deviation` in Demo Controls.
-   - Traveler moves ~140m off route. Risk score increases to Caution (~36). Notice gentle guidance banner.
-4. **Trigger High Risk Drift & Fast-Forward**:
-   - Click `🟠 High Risk Drift`.
-   - Traveler moves 450m away into an alleyway. "Are you safe?" check-in modal appears with 15-minute countdown.
-   - Click `⚡ Fast-Forward Timeout` (accelerates countdown into 20 seconds).
-   - Watch the countdown hit 0:00 $\to$ **Emergency Protocol activates automatically**!
-5. **Emergency Experience**:
-   - Full-screen emergency alert pops up with synthesized Web Audio siren.
-   - View live dispatch logs to Guardian and 911 CAD.
-   - Press and hold **"Hold for 5 seconds to Cancel Emergency"** $\to$ alarm deactivates, safe chime plays, cancellation is logged in audit feed.
-6. **Test Mobile SOS & Shake Gesture**:
-   - Switch to **Traveler View**.
-   - Press and hold the red **SOS** button for 3 seconds $\to$ circular progress ring fills and triggers Emergency.
-   - Alternatively, click **"Test Shake Gesture"** to simulate the 3-shake DeviceMotion trigger.
+- [FIREBASE_SETUP.md](file:///FIREBASE_SETUP.md): Step-by-step guide for Firebase Auth, Google OAuth, Cloud Firestore, and Security Rules.
+- [API_SECURITY_SETUP.md](file:///API_SECURITY_SETUP.md): Architecture for API key protection, App Check, Cloud Functions, and secret rotation.
+- [firestore.rules](file:///firestore.rules): Production Firestore Security Rules enforcing RBAC and default-deny.
 
 ---
 
-## 🛠️ Technology Stack
-- **Frontend**: HTML5, Modern React 18 (Babel Standalone), Vanilla CSS Design System.
-- **Mapping**: Leaflet.js with OpenStreetMap (zero paid API keys required).
-- **Sensory & Audio**: Web Audio API Dual-Tone Siren Synthesizer.
-- **Sensors**: Browser DeviceMotion API for mobile shake detection.
-- **Persistence**: LocalStorage API for offline incident logs and custom route configurations.
+## 🤖 Google Antigravity Usage
+
+SafeRoute Guardian was built and upgraded using **Google Antigravity**, Google's advanced agentic coding assistant. Antigravity was utilized for:
+- Architecting the 3-role multi-tenant RBAC system and permission tiers.
+- Implementing the 6-signal explainable AI Risk Engine.
+- Integrating Firebase Authentication, Google OAuth, and Cloud Firestore.
+- Generating production-grade Firestore Security Rules and zero-trust API protection.
+- Crafting responsive, accessible UI components with Web Audio synthesis and hardware sensor integration.

@@ -1,0 +1,195 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // =========================================================================
+    // SafeRoute Guardian - Production Firestore Security Rules
+    // Principle of Least Privilege: Default Deny, Role-Based Access Control (RBAC),
+    // Granular Family Linking, and Organization Multi-Tenant Isolation.
+    // =========================================================================
+
+    // Base Helper Functions
+    function isAuthenticated() {
+      return request.auth != null && request.auth.uid != null;
+    }
+
+    function isUser(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Check if user has an active membership record in an organization
+    function isOrgMember(orgId) {
+      return isAuthenticated() && exists(/databases/$(database)/documents/organizations/$(orgId)/members/$(request.auth.uid));
+    }
+
+    // Check if user is an Organization Administrator
+    function isOrgAdmin(orgId) {
+      return isAuthenticated() && (
+        get(/databases/$(database)/documents/organizations/$(orgId)/members/$(request.auth.uid)).data.role == 'admin' ||
+        get(/databases/$(database)/documents/organizations/$(orgId)).data.ownerId == request.auth.uid
+      );
+    }
+
+    // Check if user is assigned to a specific traveler within an organization
+    function isAssignedStaff(travelerData) {
+      return isAuthenticated() && (
+        travelerData.assignedStaffIds != null &&
+        request.auth.uid in travelerData.assignedStaffIds
+      );
+    }
+
+    // Check if authenticated user is a verified parent of a traveler
+    function isLinkedParent(travelerData) {
+      return isAuthenticated() && (
+        travelerData.linkedParentIds != null &&
+        request.auth.uid in travelerData.linkedParentIds
+      );
+    }
+
+    // =========================================================================
+    // 1. Users Collection
+    // =========================================================================
+    match /users/{userId} {
+      // A user can read their own profile
+      allow read: if isUser(userId);
+      
+      // A user can create/update only their own non-sensitive profile data
+      allow create: if isUser(userId);
+      allow update: if isUser(userId) && (
+        // Prevent users from tampering with arbitrary organization memberships directly
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['internalPermissions'])
+      );
+      allow delete: if false; // Profiles must not be deleted directly without cascade cleanup
+    }
+
+    // =========================================================================
+    // 2. Organizations & Members Subcollection
+    // =========================================================================
+    match /organizations/{orgId} {
+      // Organization members can view their organization metadata
+      allow read: if isOrgMember(orgId);
+      
+      // Any authenticated user can register a new organization (becoming owner)
+      allow create: if isAuthenticated() && request.resource.data.ownerId == request.auth.uid;
+      
+      // Only organization admins / owners can update organization details
+      allow update: if isOrgAdmin(orgId);
+      allow delete: if isAuthenticated() && resource.data.ownerId == request.auth.uid;
+
+      // Organization Members Subcollection
+      match /members/{memberId} {
+        // Members within the organization can view the roster
+        allow read: if isOrgMember(orgId);
+        
+        // Only Organization Admins can add, update, or remove members
+        allow create, update, delete: if isOrgAdmin(orgId);
+      }
+    }
+
+    // =========================================================================
+    // 3. Travelers Collection
+    // =========================================================================
+    match /travelers/{travelerId} {
+      // Read access: Owner (Tourist/Traveler), Linked Parent, Assigned Staff, or Org Admin
+      allow read: if isAuthenticated() && (
+        resource.data.ownerUserId == request.auth.uid ||
+        isLinkedParent(resource.data) ||
+        (resource.data.organizationId != null && isOrgAdmin(resource.data.organizationId)) ||
+        isAssignedStaff(resource.data)
+      );
+
+      // Create: Owner creating their traveler profile, Parent adding dependent, or Org Admin
+      allow create: if isAuthenticated() && (
+        request.resource.data.ownerUserId == request.auth.uid ||
+        (request.resource.data.linkedParentIds != null && request.auth.uid in request.resource.data.linkedParentIds) ||
+        (request.resource.data.organizationId != null && isOrgAdmin(request.resource.data.organizationId))
+      );
+
+      // Update: Owner, Linked Parent, or Org Admin
+      allow update: if isAuthenticated() && (
+        resource.data.ownerUserId == request.auth.uid ||
+        isLinkedParent(resource.data) ||
+        (resource.data.organizationId != null && isOrgAdmin(resource.data.organizationId))
+      );
+
+      allow delete: if isAuthenticated() && (
+        resource.data.ownerUserId == request.auth.uid ||
+        (resource.data.organizationId != null && isOrgAdmin(resource.data.organizationId))
+      );
+    }
+
+    // =========================================================================
+    // 4. Routes & Geofence Corridors Collection
+    // =========================================================================
+    match /routes/{routeId} {
+      // Personal routes: readable by owner or linked parent
+      // Organization routes: readable by organization members
+      allow read: if isAuthenticated() && (
+        (resource.data.ownerType == 'personal' && (
+          resource.data.travelerId == request.auth.uid ||
+          (resource.data.allowedViewerIds != null && request.auth.uid in resource.data.allowedViewerIds)
+        )) ||
+        (resource.data.ownerType == 'organization' && isOrgMember(resource.data.organizationId))
+      );
+
+      // Create: Personal route owner or Organization Admin
+      allow create: if isAuthenticated() && (
+        (request.resource.data.ownerType == 'personal' && request.resource.data.travelerId == request.auth.uid) ||
+        (request.resource.data.ownerType == 'organization' && isOrgAdmin(request.resource.data.organizationId))
+      );
+
+      // Update/Delete: Personal route owner or Organization Admin
+      allow update, delete: if isAuthenticated() && (
+        (resource.data.ownerType == 'personal' && resource.data.travelerId == request.auth.uid) ||
+        (resource.data.ownerType == 'organization' && isOrgAdmin(resource.data.organizationId))
+      );
+    }
+
+    // =========================================================================
+    // 5. Alerts & Incident Logs Collection
+    // =========================================================================
+    match /alerts/{alertId} {
+      // Read access: Traveler, Linked Parent, or Org Staff/Admin
+      allow read: if isAuthenticated() && (
+        (resource.data.allowedViewerIds != null && request.auth.uid in resource.data.allowedViewerIds) ||
+        (resource.data.organizationId != null && isOrgMember(resource.data.organizationId))
+      );
+
+      // Create: Authenticated users can trigger alerts (e.g. SOS, check-in, deviation log)
+      allow create: if isAuthenticated();
+
+      // Update: Staff/Admin resolving or acknowledging an alert
+      allow update: if isAuthenticated() && (
+        (resource.data.organizationId != null && isOrgMember(resource.data.organizationId)) ||
+        (resource.data.allowedViewerIds != null && request.auth.uid in resource.data.allowedViewerIds)
+      );
+
+      allow delete: if false; // Alert audit logs are immutable for compliance
+    }
+
+    // =========================================================================
+    // 6. Journeys & Live Telemetry Collection
+    // =========================================================================
+    match /journeys/{journeyId} {
+      // Read access: Traveler, Linked Parent, or Org Staff/Admin
+      allow read: if isAuthenticated() && (
+        resource.data.travelerId == request.auth.uid ||
+        (resource.data.allowedViewerIds != null && request.auth.uid in resource.data.allowedViewerIds) ||
+        (resource.data.organizationId != null && isOrgMember(resource.data.organizationId))
+      );
+
+      // Write: Traveler updating location/beacon/checkin or Org Admin configuring active journey
+      allow create, update: if isAuthenticated() && (
+        request.resource.data.travelerId == request.auth.uid ||
+        (request.resource.data.organizationId != null && isOrgMember(request.resource.data.organizationId))
+      );
+
+      allow delete: if false;
+    }
+
+    // Default Deny All Other Access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

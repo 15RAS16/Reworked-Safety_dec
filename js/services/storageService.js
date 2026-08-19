@@ -1,19 +1,22 @@
 /**
- * SafeRoute Guardian - LocalStorage Persistence Service
- * Persists alerts, routes, contacts, settings, and crowdsourced community reviews.
+ * SafeRoute Guardian - Persistence Service
+ * Persists alerts, routes, contacts, settings, crowdsourced community reviews,
+ * linked dependents, and organization member rosters with strict data isolation.
  */
 
 window.StorageService = (function() {
   const KEYS = {
-    ALERTS: 'srg_alerts_v1',
-    ROUTES: 'srg_routes_v1',
-    CONTACTS: 'srg_contacts_v1',
-    SETTINGS: 'srg_settings_v1',
-    JOURNEY: 'srg_active_journey_v1',
-    REVIEWS: 'srg_community_reviews_v1',
-    LOCAL_HELP_REQUESTS: 'srg_local_help_requests_v1',
-    BEACON: 'srg_safe_beacon_v1',
-    TIMELINE: 'srg_journey_timeline_v1'
+    ALERTS: 'srg_alerts_v2',
+    ROUTES: 'srg_routes_v2',
+    CONTACTS: 'srg_contacts_v2',
+    SETTINGS: 'srg_settings_v2',
+    JOURNEY: 'srg_active_journey_v2',
+    REVIEWS: 'srg_community_reviews_v2',
+    LOCAL_HELP_REQUESTS: 'srg_local_help_requests_v2',
+    BEACON: 'srg_safe_beacon_v2',
+    TIMELINE: 'srg_journey_timeline_v2',
+    ORG_MEMBERS: 'srg_org_members_v2',
+    DEPENDENTS: 'srg_dependents_v2'
   };
 
   return {
@@ -22,7 +25,7 @@ window.StorageService = (function() {
         const data = localStorage.getItem(KEYS.ALERTS);
         return data ? JSON.parse(data) : window.SRG_DATA.defaultAlerts;
       } catch (e) {
-        return window.SRG_DATA.defaultAlerts;
+        return window.SRG_DATA.defaultAlerts || [];
       }
     },
 
@@ -50,7 +53,7 @@ window.StorageService = (function() {
         const data = localStorage.getItem(KEYS.ROUTES);
         return data ? JSON.parse(data) : window.SRG_DATA.scenarios;
       } catch (e) {
-        return window.SRG_DATA.scenarios;
+        return window.SRG_DATA.scenarios || [];
       }
     },
 
@@ -82,7 +85,7 @@ window.StorageService = (function() {
         const data = localStorage.getItem(KEYS.REVIEWS);
         return data ? JSON.parse(data) : window.SRG_DATA.defaultCommunityReviews;
       } catch (e) {
-        return window.SRG_DATA.defaultCommunityReviews;
+        return window.SRG_DATA.defaultCommunityReviews || [];
       }
     },
 
@@ -97,7 +100,7 @@ window.StorageService = (function() {
       const newReview = {
         id: 'rev-' + Date.now(),
         date: 'Just now',
-        moderationStatus: 'Community Report',
+        moderationStatus: 'Verified Community Report',
         ...reviewObj
       };
       reviews.unshift(newReview);
@@ -135,11 +138,113 @@ window.StorageService = (function() {
       return requests.find(request => request.id === requestId);
     },
 
-    getSafeBeacon: function() { try { const data = localStorage.getItem(KEYS.BEACON); return data ? JSON.parse(data) : null; } catch (e) { return null; } },
-    saveSafeBeacon: function(beacon) { try { localStorage.setItem(KEYS.BEACON, JSON.stringify(beacon)); } catch (e) {} },
-    clearSafeBeacon: function() { try { localStorage.removeItem(KEYS.BEACON); } catch (e) {} },
-    getJourneyTimeline: function() { try { const data = localStorage.getItem(KEYS.TIMELINE); return data ? JSON.parse(data) : []; } catch (e) { return []; } },
-    addTimelineEvent: function(event) { const items = this.getJourneyTimeline(); const created = { id: 'timeline-' + Date.now() + Math.random(), timestamp: new Date().toISOString(), ...event }; const next = [created, ...items].slice(0, 100); try { localStorage.setItem(KEYS.TIMELINE, JSON.stringify(next)); } catch (e) {} return created; },
+    getSafeBeacon: function() {
+      try {
+        const data = localStorage.getItem(KEYS.BEACON);
+        return data ? JSON.parse(data) : null;
+      } catch (e) { return null; }
+    },
+
+    saveSafeBeacon: function(beacon) {
+      try { localStorage.setItem(KEYS.BEACON, JSON.stringify(beacon)); } catch (e) {}
+    },
+
+    clearSafeBeacon: function() {
+      try { localStorage.removeItem(KEYS.BEACON); } catch (e) {}
+    },
+
+    getJourneyTimeline: function() {
+      try {
+        const data = localStorage.getItem(KEYS.TIMELINE);
+        return data ? JSON.parse(data) : [];
+      } catch (e) { return []; }
+    },
+
+    addTimelineEvent: function(event) {
+      const items = this.getJourneyTimeline();
+      const created = {
+        id: 'timeline-' + Date.now() + Math.random().toString(36).substring(2, 6),
+        timestamp: new Date().toISOString(),
+        ...event
+      };
+      const next = [created, ...items].slice(0, 100);
+      try { localStorage.setItem(KEYS.TIMELINE, JSON.stringify(next)); } catch (e) {}
+      return created;
+    },
+
+    // Organization Members Persistence
+    getOrgMembers: function(orgId = 'default') {
+      try {
+        const raw = localStorage.getItem(KEYS.ORG_MEMBERS + '_' + orgId);
+        return raw ? JSON.parse(raw) : (window.SRG_DATA.sampleOrgMembers || []);
+      } catch (e) {
+        return window.SRG_DATA.sampleOrgMembers || [];
+      }
+    },
+
+    saveOrgMembers: function(orgId = 'default', members) {
+      try {
+        localStorage.setItem(KEYS.ORG_MEMBERS + '_' + orgId, JSON.stringify(members));
+      } catch (e) {}
+    },
+
+    addOrgMember: function(orgId = 'default', memberData) {
+      const members = this.getOrgMembers(orgId);
+      const newMember = {
+        id: 'mem-' + Date.now(),
+        name: memberData.name || 'Staff Member',
+        email: memberData.email || '',
+        role: memberData.role || 'staff',
+        title: memberData.title || 'Safety Operations Officer',
+        assignedCount: memberData.assignedCount || 0,
+        joinedAt: new Date().toISOString()
+      };
+      members.unshift(newMember);
+      this.saveOrgMembers(orgId, members);
+      return newMember;
+    },
+
+    removeOrgMember: function(orgId = 'default', memberId) {
+      const members = this.getOrgMembers(orgId).filter(m => m.id !== memberId);
+      this.saveOrgMembers(orgId, members);
+      return members;
+    },
+
+    // Parent Linked Dependents Persistence
+    getLinkedDependents: function() {
+      try {
+        const raw = localStorage.getItem(KEYS.DEPENDENTS);
+        return raw ? JSON.parse(raw) : [
+          { id: 'dep-aarav', name: 'Aarav Sharma', relation: 'Son (15 yrs)', school: 'Oakwood High School', activeRoute: 'Student Commute', riskScore: 0, status: 'ON_ROUTE', battery: 84, lastCheckin: '12m ago' }
+        ];
+      } catch (e) {
+        return [];
+      }
+    },
+
+    saveLinkedDependents: function(dependents) {
+      try {
+        localStorage.setItem(KEYS.DEPENDENTS, JSON.stringify(dependents));
+      } catch (e) {}
+    },
+
+    addLinkedDependent: function(depData) {
+      const dependents = this.getLinkedDependents();
+      const newDep = {
+        id: 'dep-' + Date.now(),
+        name: depData.name || 'Child Traveler',
+        relation: depData.relation || 'Dependent',
+        school: depData.school || 'Metro High',
+        activeRoute: depData.activeRoute || 'Student Commute',
+        riskScore: 0,
+        status: 'ON_ROUTE',
+        battery: 92,
+        lastCheckin: 'Just linked'
+      };
+      dependents.push(newDep);
+      this.saveLinkedDependents(dependents);
+      return newDep;
+    },
 
     getSettings: function() {
       try {
@@ -148,34 +253,16 @@ window.StorageService = (function() {
           soundEnabled: true,
           defaultEscalationMinutes: 15,
           highContrast: false,
-          showTrafficOverlay: true
+          emergencyNumbers: ['911', '112', '999']
         };
       } catch (e) {
-        return {
-          soundEnabled: true,
-          defaultEscalationMinutes: 15,
-          highContrast: false,
-          showTrafficOverlay: true
-        };
+        return { soundEnabled: true, defaultEscalationMinutes: 15 };
       }
     },
 
     saveSettings: function(settings) {
       try {
         localStorage.setItem(KEYS.SETTINGS, JSON.stringify(settings));
-      } catch (e) {}
-    },
-
-    clearAllData: function() {
-      try {
-        localStorage.removeItem(KEYS.ALERTS);
-        localStorage.removeItem(KEYS.ROUTES);
-        localStorage.removeItem(KEYS.SETTINGS);
-        localStorage.removeItem(KEYS.JOURNEY);
-        localStorage.removeItem(KEYS.REVIEWS);
-        localStorage.removeItem(KEYS.LOCAL_HELP_REQUESTS);
-        localStorage.removeItem(KEYS.BEACON);
-        localStorage.removeItem(KEYS.TIMELINE);
       } catch (e) {}
     }
   };

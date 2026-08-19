@@ -1,0 +1,31 @@
+# Environment variables & local configuration
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+.env*.local
+
+# Firebase & Cloud Service Account Keys
+service-account.json
+firebase-admin-key.json
+google-services.json
+GoogleService-Info.plist
+
+# Private Keys and Certificates
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Dependency and build directories
+node_modules/
+dist/
+build/
+.cache/
+
+# OS and Editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

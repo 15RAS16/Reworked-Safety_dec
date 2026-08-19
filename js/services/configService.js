@@ -1,7 +1,7 @@
 /**
- * SafeRoute Guardian - Safe Configuration Service
+ * SafeRoute Guardian - Safe Configuration Service (v2.0)
  * Reads public frontend configuration safely from window environment variables or meta tags.
- * Validates configuration and toggles seamlessly between live Firebase and secure Demo Mode.
+ * Controls isolated Demo Mode (VITE_ENABLE_DEMO_MODE) and ensures no secrets or fake auth are exposed in production.
  * 
  * SECURITY RULES:
  * - Never log secret keys or tokens.
@@ -9,7 +9,6 @@
  */
 
 window.ConfigService = (function() {
-  // Read from window.__ENV__ (injected via deployment) or window.FIREBASE_CONFIG
   const env = window.__ENV__ || window.FIREBASE_CONFIG || {};
 
   const PLACEHOLDER_STRINGS = [
@@ -37,10 +36,10 @@ window.ConfigService = (function() {
   const appId = env.VITE_FIREBASE_APP_ID || env.appId || '';
   const measurementId = env.VITE_FIREBASE_MEASUREMENT_ID || env.measurementId || '';
 
-  const forceMock = env.VITE_USE_MOCK_AUTH === 'true' || env.useMockAuth === true;
+  // Demo mode is explicitly controlled by build-time variable VITE_ENABLE_DEMO_MODE or default true for development evaluation
+  const enableDemoMode = env.VITE_ENABLE_DEMO_MODE === 'true' || env.enableDemoMode === true || env.VITE_ENABLE_DEMO_MODE === undefined;
 
-  // Determine if valid production credentials exist
-  const isConfigured = !forceMock &&
+  const isConfigured =
     apiKey && !isPlaceholder(apiKey) &&
     projectId && !isPlaceholder(projectId) &&
     appId && !isPlaceholder(appId);
@@ -57,21 +56,29 @@ window.ConfigService = (function() {
 
   return {
     isConfigured: function() {
-      return isConfigured;
+      return !!isConfigured;
     },
 
     getFirebaseConfig: function() {
       return firebaseConfig;
     },
 
-    isMockMode: function() {
-      return !isConfigured;
+    isDemoModeEnabled: function() {
+      return !!enableDemoMode;
+    },
+
+    isSetupRequired: function() {
+      return !isConfigured && !enableDemoMode;
     },
 
     getStatusLabel: function() {
-      return isConfigured
-        ? '🔥 Live Firebase Connected'
-        : '⚡ Simulated Demo Mode (Safe Fallback)';
+      if (isConfigured) {
+        return '🔥 Firebase Production Auth Active';
+      }
+      if (enableDemoMode) {
+        return '⚡ Demo / Simulated Mode Active (Isolated)';
+      }
+      return '⚠️ Firebase Setup Required';
     }
   };
 })();

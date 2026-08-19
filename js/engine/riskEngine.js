@@ -1,6 +1,7 @@
 /**
- * SafeRoute Guardian - Explainable AI Safety Risk Engine
- * Computes deterministic, explainable safety risk score (0-100) using contextual safety signals.
+ * SafeRoute Guardian - Explainable AI Safety Risk Engine (v2.0)
+ * Computes deterministic, explainable safety risk scores (0-100) using 6 contextual safety signals.
+ * Implements high-precision Point-to-Polyline-Segment geodesic projection to prevent false deviations on long spans.
  * Includes Traveler Journey Risk Assessment and Tourist Destination Safety Intelligence.
  */
 
@@ -12,14 +13,14 @@ window.RiskEngine = {
     SAFE: { min: 0, max: 29, key: 'SAFE', label: 'Safe / Low Risk', color: '#10B981', bg: 'rgba(16, 185, 129, 0.15)', border: '#10B981' },
     CAUTION: { min: 30, max: 59, key: 'CAUTION', label: 'Caution', color: '#F59E0B', bg: 'rgba(245, 158, 11, 0.15)', border: '#F59E0B' },
     HIGH_RISK: { min: 60, max: 79, key: 'HIGH_RISK', label: 'High Risk', color: '#F97316', bg: 'rgba(249, 115, 22, 0.15)', border: '#F97316' },
-    EMERGENCY: { min: 80, max: 100, key: 'EMERGENCY', label: 'Emergency / Avoid', color: '#EF4444', bg: 'rgba(239, 68, 68, 0.2)', border: '#EF4444' }
+    EMERGENCY: { min: 80, max: 100, key: 'EMERGENCY', label: 'Emergency', color: '#EF4444', bg: 'rgba(239, 68, 68, 0.2)', border: '#EF4444' }
   },
 
   /**
-   * Calculate geographic distance in meters between two lat/lng points using Haversine formula
+   * Calculate great-circle distance in meters between two lat/lng points using Haversine formula
    */
   getDistanceMeters: function(lat1, lon1, lat2, lon2) {
-    const R = 6371e3; // Earth's radius in meters
+    const R = 6371000; // Earth's mean radius in meters
     const rad = Math.PI / 180;
     const dLat = (lat2 - lat1) * rad;
     const dLon = (lon2 - lon1) * rad;
@@ -27,30 +28,76 @@ window.RiskEngine = {
               Math.cos(lat1 * rad) * Math.cos(lat2 * rad) *
               Math.sin(dLon / 2) * Math.sin(dLon / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return Math.round(R * c);
+    return R * c;
   },
 
   /**
-   * Calculate minimum distance from a point to the polyline route waypoints
+   * Calculate minimum perpendicular distance in meters from a point P to a polyline segment AB.
+   * Uses equirectangular projection for high accuracy across city corridor scales.
+   */
+  getDistanceToSegmentMeters: function(pLat, pLon, aLat, aLon, bLat, bLon) {
+    const rad = Math.PI / 180;
+    const meanLat = ((aLat + bLat) / 2) * rad;
+    const R = 6371000;
+
+    // Convert spherical coordinates to planar meters relative to point A
+    const cosMeanLat = Math.cos(meanLat);
+    const px = (pLon - aLon) * rad * R * cosMeanLat;
+    const py = (pLat - aLat) * rad * R;
+    const bx = (bLon - aLon) * rad * R * cosMeanLat;
+    const by = (bLat - aLat) * rad * R;
+
+    const segmentLenSq = bx * bx + by * by;
+    if (segmentLenSq === 0) {
+      // Segment A and B are identical
+      return Math.sqrt(px * px + py * py);
+    }
+
+    // Projection parameter t clamped to segment [0, 1]
+    const t = Math.max(0, Math.min(1, (px * bx + py * by) / segmentLenSq));
+    const projX = t * bx;
+    const projY = t * by;
+
+    const dx = px - projX;
+    const dy = py - projY;
+    return Math.sqrt(dx * dx + dy * dy);
+  },
+
+  /**
+   * Calculate minimum distance in meters from a point to the entire polyline route.
+   * Iterates through every segment [waypoints[i], waypoints[i+1]] to find the closest orthogonal distance.
    */
   getDistanceToRoute: function(currentPos, waypoints) {
     if (!currentPos || !waypoints || waypoints.length === 0) return 0;
+    if (waypoints.length === 1) {
+      return Math.round(this.getDistanceMeters(currentPos[0], currentPos[1], waypoints[0][0], waypoints[0][1]));
+    }
+
     let minDistance = Infinity;
 
-    for (let i = 0; i < waypoints.length; i++) {
-      const dist = this.getDistanceMeters(
+    for (let i = 0; i < waypoints.length - 1; i++) {
+      const segDist = this.getDistanceToSegmentMeters(
         currentPos[0], currentPos[1],
-        waypoints[i][0], waypoints[i][1]
+        waypoints[i][0], waypoints[i][1],
+        waypoints[i + 1][0], waypoints[i + 1][1]
       );
-      if (dist < minDistance) {
-        minDistance = dist;
+      if (segDist < minDistance) {
+        minDistance = segDist;
       }
     }
-    return minDistance;
+
+    return Math.round(minDistance);
   },
 
   /**
    * Traveler Journey Live Risk Assessment (0 - 100)
+   * Evaluates 6 contextual signals with transparent explainability:
+   * 1. Geofence Corridor Offset (0 - 35 pts)
+   * 2. Time Drift Outside Corridor (0 - 25 pts)
+   * 3. Trajectory Vector Direction (0 - 15 pts)
+   * 4. Time-of-Day Hazard (0 - 15 pts)
+   * 5. Safety Check-in Responsiveness (0 - 20 pts)
+   * 6. Emergency SOS / Timeout Override (100 pts)
    */
   assessRisk: function(params) {
     const {
@@ -61,339 +108,220 @@ window.RiskEngine = {
       timeOffRouteSeconds = 0,
       isMovingFarther = false,
       isNight = false,
-      checkinStatus = 'NOT_NEEDED',
+      checkinStatus = 'NOT_NEEDED', // 'NOT_NEEDED' | 'PENDING' | 'ACKNOWLEDGED' | 'EXPIRED'
       isSosActive = false,
       destinationName = 'Destination'
     } = params;
 
-    // 1. Immediate SOS Override
+    // 1. Immediate SOS Override (Max Priority)
     if (isSosActive) {
       return {
         score: 100,
         level: this.LEVELS.EMERGENCY,
         isEmergency: true,
-        summary: `[Demo / Simulated] EMERGENCY ALERT: ${travelerName} has triggered an active SOS panic alarm. Immediate protocol activated.`,
+        summary: `[Demo / Simulated] EMERGENCY ALERT: ${travelerName} has triggered an active SOS panic alarm. Safety network and dispatch alerted.`,
         factors: [
-          { name: 'SOS Panic Trigger', score: 100, max: 100, description: 'Manual emergency SOS or forceful shake gesture activated', isAlert: true }
+          { name: 'SOS Panic Trigger', score: 100, max: 100, detail: 'Manual 3s hold panic button or 3-shake hardware gesture activated.', isAlert: true }
         ],
+        distanceToRouteCenter: 0,
         distanceOffCorridor: 0,
-        recommendation: 'Contact emergency dispatch immediately. Dispatching live location to safety network.'
+        primaryFactor: 'Active SOS Emergency Trigger',
+        plainExplanation: 'Emergency protocol is active. Sirens and emergency broadcasts are running.',
+        recommendedAction: 'Keep your phone on. If safe to do so, stay in a well-lit location or hold for 5s to cancel if triggered by mistake.'
       };
     }
 
-    // 2. Check-in expired override (Escalation timeout)
+    // 2. Unresponsive Check-in Expired Override
     if (checkinStatus === 'EXPIRED') {
       return {
         score: 95,
         level: this.LEVELS.EMERGENCY,
         isEmergency: true,
-        summary: `[Demo / Simulated] EMERGENCY ESCALATION: ${travelerName} did not respond to the safety check-in within the allowable time window.`,
+        summary: `[Demo / Simulated] EMERGENCY ESCALATION: ${travelerName} did not respond to the safety check-in within the timeout window.`,
         factors: [
-          { name: 'Unresponsive Escalation Timeout', score: 95, max: 100, description: 'Traveler remained outside corridor without acknowledging safety', isAlert: true }
+          { name: 'Unresponsive Check-in Timeout', score: 95, max: 100, detail: 'Safety check-in expired without traveler acknowledgment.', isAlert: true }
         ],
+        distanceToRouteCenter: 0,
         distanceOffCorridor: 0,
-        recommendation: 'Emergency protocol initiated automatically due to lack of response.'
+        primaryFactor: 'Safety Check-in Timeout Escalation',
+        plainExplanation: 'You did not respond to the "Are you safe?" check-in. Emergency contacts have been notified.',
+        recommendedAction: 'Tap "I\'m Safe" immediately or hold for 5s to cancel the escalation broadcast.'
       };
     }
 
-    // Compute distance from centerline
+    // Compute precise point-to-polyline-segment distance
     const distanceToRouteCenter = this.getDistanceToRoute(currentPos, routeWaypoints);
-    const distanceOutsideCorridor = Math.max(0, distanceToRouteCenter - corridorWidthMeters);
+    const distanceOffCorridor = Math.max(0, distanceToRouteCenter - corridorWidthMeters);
 
     let totalScore = 0;
     const factors = [];
 
-    // Factor A: Geofence Corridor Proximity & Breach (Max 35 points)
+    // Factor A: Geofence Corridor Offset (Max 35 points)
     let corridorPoints = 0;
-    let corridorDesc = '';
-    if (distanceOutsideCorridor === 0) {
+    let corridorDetail = '';
+    if (distanceOffCorridor === 0) {
       corridorPoints = 0;
-      corridorDesc = `Within approved ${corridorWidthMeters}m safe buffer (dist: ${distanceToRouteCenter}m)`;
-    } else if (distanceOutsideCorridor <= 50) {
+      corridorDetail = `Safely within approved ${corridorWidthMeters}m corridor buffer (offset: ${distanceToRouteCenter}m).`;
+    } else if (distanceOffCorridor <= 50) {
       corridorPoints = 12;
-      corridorDesc = `Slight deviation: ${distanceOutsideCorridor}m outside safe corridor`;
-    } else if (distanceOutsideCorridor <= 200) {
+      corridorDetail = `Slight deviation: ${distanceOffCorridor}m outside safe corridor boundary.`;
+    } else if (distanceOffCorridor <= 200) {
       corridorPoints = 24;
-      corridorDesc = `Moderate deviation: ${distanceOutsideCorridor}m outside safe corridor`;
+      corridorDetail = `Moderate deviation: ${distanceOffCorridor}m outside safe corridor boundary.`;
     } else {
       corridorPoints = 35;
-      corridorDesc = `Significant breach: ${distanceOutsideCorridor}m outside safe corridor`;
+      corridorDetail = `Significant breach: ${distanceOffCorridor}m outside safe corridor boundary.`;
     }
     totalScore += corridorPoints;
     factors.push({
       name: 'Corridor Geofence Offset',
       score: corridorPoints,
       max: 35,
-      description: corridorDesc,
+      detail: corridorDetail,
       isAlert: corridorPoints > 15
     });
 
     // Factor B: Time Drift Outside Corridor (Max 25 points)
     let timePoints = 0;
-    let timeDesc = '';
+    let timeDetail = '';
     const minutesAway = Math.floor(timeOffRouteSeconds / 60);
-    if (distanceOutsideCorridor === 0 || timeOffRouteSeconds === 0) {
+    if (distanceOffCorridor === 0 || timeOffRouteSeconds === 0) {
       timePoints = 0;
-      timeDesc = 'No time spent outside corridor';
+      timeDetail = 'Zero time spent outside approved corridor.';
     } else if (timeOffRouteSeconds < 120) {
       timePoints = 8;
-      timeDesc = `Off-route for ${timeOffRouteSeconds}s (< 2 mins)`;
+      timeDetail = `Off-route for ${timeOffRouteSeconds}s (< 2 minutes).`;
     } else if (timeOffRouteSeconds < 360) {
       timePoints = 16;
-      timeDesc = `Off-route for ${minutesAway} min ${timeOffRouteSeconds % 60}s`;
+      timeDetail = `Off-route for ${minutesAway}m ${timeOffRouteSeconds % 60}s.`;
     } else {
       timePoints = 25;
-      timeDesc = `Off-route for extended period (${minutesAway} minutes)`;
+      timeDetail = `Off-route for extended period (${minutesAway} minutes).`;
     }
     totalScore += timePoints;
     factors.push({
       name: 'Time Spent Off-Route',
       score: timePoints,
       max: 25,
-      description: timeDesc,
+      detail: timeDetail,
       isAlert: timePoints > 10
     });
 
-    // Factor C: Trajectory Vector & Movement Trend (Max 15 points)
-    let vectorPoints = 0;
-    let vectorDesc = '';
-    if (distanceOutsideCorridor === 0) {
-      vectorPoints = 0;
-      vectorDesc = 'Heading directly along approved trajectory';
+    // Factor C: Trajectory Vector Direction (Max 15 points)
+    let trajectoryPoints = 0;
+    let trajectoryDetail = '';
+    if (distanceOffCorridor === 0) {
+      trajectoryPoints = 0;
+      trajectoryDetail = 'Traveling on approved route trajectory.';
     } else if (isMovingFarther) {
-      vectorPoints = 15;
-      vectorDesc = 'Trajectory vector moving FARTHER away from safe corridor';
+      trajectoryPoints = 15;
+      trajectoryDetail = 'Trajectory vector heading farther away from safe corridor.';
     } else {
-      vectorPoints = 3;
-      vectorDesc = 'Vector indicates traveler is returning toward the safe corridor';
+      trajectoryPoints = 4;
+      trajectoryDetail = 'Trajectory vector returning toward approved corridor.';
     }
-    totalScore += vectorPoints;
+    totalScore += trajectoryPoints;
     factors.push({
       name: 'Trajectory Vector Direction',
-      score: vectorPoints,
+      score: trajectoryPoints,
       max: 15,
-      description: vectorDesc,
-      isAlert: vectorPoints >= 10
+      detail: trajectoryDetail,
+      isAlert: trajectoryPoints >= 10
     });
 
-    // Factor D: Journey Time-of-Day Context (Max 15 points)
-    let timeOfDayPoints = 0;
-    let timeOfDayDesc = '';
+    // Factor D: Time-of-Day Hazard (Max 15 points)
+    let nightPoints = 0;
+    let nightDetail = '';
     if (isNight) {
-      timeOfDayPoints = 12;
-      timeOfDayDesc = 'Night-time / low-visibility window active (heightened risk factor)';
+      nightPoints = distanceOffCorridor > 0 ? 15 : 6;
+      nightDetail = 'Night-time / low ambient lighting conditions active.';
     } else {
-      timeOfDayPoints = 0;
-      timeOfDayDesc = 'Standard daytime visibility conditions';
+      nightPoints = 0;
+      nightDetail = 'Daylight journey with good visibility.';
     }
-    totalScore += timeOfDayPoints;
+    totalScore += nightPoints;
     factors.push({
-      name: 'Time-of-Day Risk Factor',
-      score: timeOfDayPoints,
+      name: 'Time-of-Day Hazard',
+      score: nightPoints,
       max: 15,
-      description: timeOfDayDesc,
-      isAlert: timeOfDayPoints > 0
+      detail: nightDetail,
+      isAlert: nightPoints >= 10
     });
 
-    // Factor E: Check-In Response State (Max 20 points)
+    // Factor E: Safety Check-in Status (Max 20 points)
     let checkinPoints = 0;
-    let checkinDesc = '';
+    let checkinDetail = '';
     if (checkinStatus === 'PENDING') {
-      checkinPoints = 18;
-      checkinDesc = 'Unanswered "Are you safe?" check-in prompt';
+      checkinPoints = 20;
+      checkinDetail = '"Are you safe?" check-in prompt is awaiting response.';
     } else if (checkinStatus === 'ACKNOWLEDGED') {
       checkinPoints = 0;
-      checkinDesc = 'Traveler clicked "I\'m Safe" (verified responsive)';
+      checkinDetail = 'Traveler acknowledged "I\'m Safe" check-in.';
     } else {
       checkinPoints = 0;
-      checkinDesc = 'No pending check-in required';
+      checkinDetail = 'No active check-in required.';
     }
     totalScore += checkinPoints;
     factors.push({
-      name: 'Safety Check-In Status',
+      name: 'Check-in Responsiveness',
       score: checkinPoints,
       max: 20,
-      description: checkinDesc,
+      detail: checkinDetail,
       isAlert: checkinPoints > 0
     });
 
-    const finalScore = Math.min(100, Math.max(0, totalScore));
-
-    let level = this.LEVELS.SAFE;
-    if (finalScore >= this.LEVELS.EMERGENCY.min) {
-      level = this.LEVELS.EMERGENCY;
-    } else if (finalScore >= this.LEVELS.HIGH_RISK.min) {
-      level = this.LEVELS.HIGH_RISK;
-    } else if (finalScore >= this.LEVELS.CAUTION.min) {
-      level = this.LEVELS.CAUTION;
-    }
-
-    let summary = '';
-    let recommendation = '';
-
-    if (level.key === 'SAFE') {
-      summary = `Optimal safety status. ${travelerName} is progressing smoothly along the designated corridor toward ${destinationName}.`;
-      recommendation = 'Continue standard journey tracking. No action required.';
-    } else if (level.key === 'CAUTION') {
-      summary = `Caution: ${travelerName} is ${distanceOutsideCorridor}m outside the designated safe corridor for ${timeOffRouteSeconds}s.`;
-      recommendation = 'In-app gentle route guidance reminder dispatched to traveler.';
-    } else if (level.key === 'HIGH_RISK') {
-      const dirPhrase = isMovingFarther ? 'moving farther away from the corridor' : 'slowly moving back';
-      summary = `High Risk: ${travelerName} is ${distanceOutsideCorridor}m outside approved corridor, off-route for ${minutesAway}m ${timeOffRouteSeconds % 60}s, and ${dirPhrase}.`;
-      recommendation = 'Active check-in prompt dispatched to traveler and administrator alert triggered.';
-    } else {
-      summary = `Critical Risk: ${travelerName} has substantial route deviation (${distanceOutsideCorridor}m off corridor) without safety acknowledgment.`;
-      recommendation = 'Prepare emergency escalation countdown and alert guardian network.';
-    }
-
-    return {
-      score: finalScore,
-      level: level,
-      isEmergency: level.key === 'EMERGENCY',
-      summary: summary,
-      factors: factors,
-      distanceOffCorridor: distanceOutsideCorridor,
-      distanceToRouteCenter: distanceToRouteCenter,
-      recommendation: recommendation
-    };
-  },
-
-  /**
-   * Tourist Safety Intelligence & Destination Assessment (0 - 100)
-   * Evaluates environmental weather, network connectivity, official travel advisories,
-   * diurnal timing, and aggregated community feedback patterns.
-   */
-  assessTouristSafetyScore: function(params = {}) {
-    const {
-      weatherSeverity = 'CAUTION', // 'NORMAL' | 'CAUTION' | 'AVOID' | 'EMERGENCY'
-      hasDeadZone = true,
-      officialAdvisorySeverity = 'CAUTION', // 'NORMAL' | 'CAUTION' | 'AVOID' | 'EMERGENCY'
-      isNight = false,
-      communityReviews = [],
-      selectedRouteType = 'fastest' // 'fastest' | 'safer'
-    } = params;
-
-    let score = 0;
-    const factorList = [];
-    const safeActions = [];
-
-    // If 'safer' route is selected, baseline risk is naturally lowered
-    const routeDiscount = selectedRouteType === 'safer' ? 22 : 0;
-
-    // 1. Weather Severity Points (0 - 25 pts)
-    let weatherPts = 0;
-    let weatherText = '';
-    if (weatherSeverity === 'EMERGENCY') {
-      weatherPts = 25;
-      weatherText = 'Severe meteorological hazard (Flooding / Extreme Storms)';
-      safeActions.push('Avoid travel during peak storm window; seek shelter.');
-    } else if (weatherSeverity === 'AVOID') {
-      weatherPts = 20;
-      weatherText = 'High weather alert (Thunderstorms & torrential rain)';
-      safeActions.push('Delay departure until weather advisory is downgraded.');
-    } else if (weatherSeverity === 'CAUTION') {
-      weatherPts = 12;
-      weatherText = 'Moderate weather alert: Heavy rain & low visibility expected after 7 PM';
-      safeActions.push('Complete travel before sunset (prior to 7:00 PM).');
-    } else {
-      weatherPts = 2;
-      weatherText = 'Normal favorable weather conditions';
-    }
-    score += weatherPts;
-    factorList.push({ name: 'Weather Conditions', pts: weatherPts, max: 25, desc: weatherText });
-
-    // 2. Connectivity & Cellular Signal (0 - 20 pts)
-    let connectPts = 0;
-    let connectText = '';
-    if (selectedRouteType === 'safer') {
-      connectPts = 2;
-      connectText = 'Continuous 5G / 4G coverage along main avenues';
-    } else if (hasDeadZone) {
-      connectPts = 14;
-      connectText = 'Limited signal for 2.1 km along narrow alleyway segment';
-      safeActions.push('Download offline maps and share live trip with a trusted contact.');
-    } else {
-      connectPts = 0;
-      connectText = 'Strong continuous cellular coverage along entire route';
-    }
-    score += connectPts;
-    factorList.push({ name: 'Network Connectivity', pts: connectPts, max: 20, desc: connectText });
-
-    // 3. Official Travel Advisories (0 - 30 pts)
-    let advisoryPts = 0;
-    let advisoryText = '';
-    if (officialAdvisorySeverity === 'EMERGENCY') {
-      advisoryPts = 30;
-      advisoryText = 'Official Emergency advisory active (Restricted Zone / Curfew)';
-      safeActions.push('Avoid this area until official restrictions are lifted.');
-    } else if (officialAdvisorySeverity === 'AVOID') {
-      advisoryPts = 22;
-      advisoryText = 'Official Avoid advisory (Civil unrest / Major disruption)';
-      safeActions.push('Reroute through secondary official safe corridor.');
-    } else if (officialAdvisorySeverity === 'CAUTION') {
-      advisoryPts = 12;
-      advisoryText = 'Official Caution advisory (Walkway maintenance & crowd congestion)';
-      safeActions.push('Choose Safer Route B to bypass congested detour.');
-    } else {
-      advisoryPts = 0;
-      advisoryText = 'Normal baseline conditions; no active official advisories';
-    }
-    score += advisoryPts;
-    factorList.push({ name: 'Official Safety Advisories', pts: advisoryPts, max: 30, desc: advisoryText });
-
-    // 4. Aggregated Community Safety Patterns (0 - 25 pts)
-    // Note: Rule states single review does not dramatically skew score; repeated patterns are counted
-    let communityPts = 0;
-    const poorLightingMentions = communityReviews.filter(r => (r.tags || []).includes('Unsafe at Night') || (r.tags || []).includes('Poor Network')).length;
-    const scamMentions = communityReviews.filter(r => (r.tags || []).includes('Scam Risk') || (r.tags || []).includes('Harassment Concern')).length;
-    const safeSoloCount = communityReviews.filter(r => (r.tags || []).includes('Safe for Solo Travel') || (r.tags || []).includes('Well-lit')).length;
-
-    if (poorLightingMentions >= 2) {
-      communityPts += 8;
-    }
-    if (scamMentions >= 2) {
-      communityPts += 6;
-      safeActions.push('Keep belongings secure and avoid unauthorized street solicitors.');
-    }
-    if (safeSoloCount >= 2) {
-      communityPts = Math.max(0, communityPts - 4); // Mitigate slightly if repeated positive solo tags
-    }
-    score += communityPts;
-    factorList.push({
-      name: 'Community Safety Signals',
-      pts: communityPts,
-      max: 25,
-      desc: `${communityReviews.length} community reports analyzed (${poorLightingMentions} flag poor night lighting/network, ${safeSoloCount} report safe solo travel)`
-    });
-
-    // Apply Route Discount
-    score = Math.max(5, score - routeDiscount);
-    const finalScore = Math.min(100, Math.max(0, score));
+    // Clamp score to 0 - 100
+    const clampedScore = Math.min(100, Math.max(0, totalScore));
 
     // Determine Level
     let level = this.LEVELS.SAFE;
-    if (finalScore >= 80) level = this.LEVELS.EMERGENCY;
-    else if (finalScore >= 60) level = this.LEVELS.HIGH_RISK;
-    else if (finalScore >= 30) level = this.LEVELS.CAUTION;
+    if (clampedScore >= this.LEVELS.EMERGENCY.min) {
+      level = this.LEVELS.EMERGENCY;
+    } else if (clampedScore >= this.LEVELS.HIGH_RISK.min) {
+      level = this.LEVELS.HIGH_RISK;
+    } else if (clampedScore >= this.LEVELS.CAUTION.min) {
+      level = this.LEVELS.CAUTION;
+    }
 
-    // Plain Language Explanation
-    let explanation = '';
-    if (level.key === 'SAFE') {
-      explanation = `Low Risk (${finalScore}/100): Excellent travel conditions. Weather is stable, 100% cellular coverage, and community reports confirm well-lit pathways.`;
-    } else if (level.key === 'CAUTION') {
-      explanation = `Caution (${finalScore}/100): Heavy rain is expected after 7 PM, connectivity is limited for 2 km on the direct route, and recent community reviews mention sparse night lighting.`;
+    // Identify primary contributing factor
+    let maxFactor = factors[0];
+    for (let i = 1; i < factors.length; i++) {
+      if (factors[i].score > maxFactor.score) {
+        maxFactor = factors[i];
+      }
+    }
+
+    // Plain-language explanation
+    let plainExplanation = 'You are traveling safely along the designated corridor.';
+    let recommendedAction = `Continue along the approved route toward ${destinationName}.`;
+
+    if (level.key === 'EMERGENCY') {
+      plainExplanation = `Critical risk detected (${clampedScore}/100): ${maxFactor.name}.`;
+      recommendedAction = 'Move to a well-lit safe spot or contact emergency contacts.';
     } else if (level.key === 'HIGH_RISK') {
-      explanation = `High Risk (${finalScore}/100): Weather warning active, notable cellular dead-zone segments, and official advisories recommend avoiding narrow alleys after dusk.`;
-    } else {
-      explanation = `Avoid (${finalScore}/100): Severe weather advisory and official restriction in place. Travel along this corridor is currently discouraged.`;
+      plainExplanation = `Significant off-route deviation (${distanceOffCorridor}m outside corridor).`;
+      recommendedAction = 'Acknowledge the safety check-in prompt and return toward the approved corridor.';
+    } else if (level.key === 'CAUTION') {
+      plainExplanation = `Minor route deviation detected (${distanceOffCorridor}m from safe buffer).`;
+      recommendedAction = 'Adjust your heading to return to the designated corridor.';
     }
 
     return {
-      travelSafetyScore: finalScore,
+      score: clampedScore,
       level: level,
-      explanation: explanation,
-      factors: factorList,
-      safeActions: safeActions.length > 0 ? safeActions : ['Maintain standard travel awareness and follow designated corridor.']
+      isEmergency: level.key === 'EMERGENCY',
+      distanceToRouteCenter: distanceToRouteCenter,
+      distanceOffCorridor: distanceOffCorridor,
+      factors: factors,
+      primaryFactor: maxFactor.score > 0 ? maxFactor.name : 'Normal On-Route Travel',
+      plainExplanation: plainExplanation,
+      recommendedAction: recommendedAction,
+      summary: `${level.label} (${clampedScore}/100) — ${plainExplanation}`
     };
   }
 };
+
+// Export for Node / CommonJS test suites
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = window.RiskEngine;
+}

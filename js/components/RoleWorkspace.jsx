@@ -1,119 +1,201 @@
 /**
- * SafeRoute Guardian - Role Workspace Hub Component
- * Displays dedicated feature cards tailored to the active role and organization permission level.
+ * SafeRoute Guardian - Role Workspace Dashboard Hub
+ * Renders tailored feature cards filtered by role and organization permission level.
  */
 
 window.RoleWorkspace = function({
-  roleId,
+  currentRole = 'tourist',
   orgPermission = 'staff',
-  onBackToRoles,
-  onLaunchFeature,
+  onSelectFeature,
   activeScenario,
   riskData
 }) {
-  const roleMeta = (window.SRG_DATA.roles || []).find(r => r.id === roleId) || {
-    id: roleId,
-    title: 'Workspace',
-    icon: '🛡️',
-    badge: 'Account Role',
-    description: 'Access role-specific safety features and monitoring tools.',
-    features: []
-  };
+  const role = window.MockData.roles[currentRole] || window.MockData.roles.tourist;
 
-  // Determine feature list
-  let featureList = roleMeta.features || [];
-  if (roleId === 'organization') {
-    featureList = orgPermission === 'admin' ? (roleMeta.adminFeatures || []) : (roleMeta.staffFeatures || []);
+  let features = [];
+  if (currentRole === 'tourist') {
+    features = [
+      {
+        id: 'tourist-explore',
+        title: 'Explore Safely AI Intelligence',
+        icon: '🌸',
+        color: '#38BDF8',
+        desc: 'Destination safety index, weather warnings, cellular dead-zone intelligence, and fastest vs safer routes.'
+      },
+      {
+        id: 'user-view',
+        title: 'My Live Journey Map & SOS',
+        icon: '📍',
+        color: '#10B981',
+        desc: 'GPS corridor tracking, destination ETA, 3s hold SOS panic, and 3-shake gesture trigger.'
+      },
+      {
+        id: 'community-reviews',
+        title: 'Community Safety Reviews',
+        icon: '⭐',
+        color: '#F59E0B',
+        desc: 'Crowdsourced street safety ratings, night-lighting tags, solo travel reports, and tips.'
+      },
+      {
+        id: 'local-help',
+        title: 'Verified Local Help Network',
+        icon: '🤝',
+        color: '#818CF8',
+        desc: 'Request multilingual guidance, safe transit companions, or localized safety assistance.'
+      },
+      {
+        id: 'safe-spots',
+        title: 'Trusted Safe Spots',
+        icon: '🏪',
+        color: '#EC4899',
+        desc: 'Find 24/7 verified police substations, partner hospitals, and emergency callboxes.'
+      },
+      {
+        id: 'timeline',
+        title: 'Personal Journey Timeline',
+        icon: '◷',
+        color: '#64748B',
+        desc: 'Chronological timeline of your check-in verifications and Safe Beacon coordinate drops.'
+      }
+    ];
+  } else if (currentRole === 'parent') {
+    features = [
+      {
+        id: 'parent-dashboard',
+        title: 'Linked Dependents Live Monitor',
+        icon: '🎒',
+        color: '#10B981',
+        desc: 'Real-time school corridor monitoring, battery levels, deviation alerts, and Safe Beacon sync.'
+      },
+      {
+        id: 'alerts',
+        title: 'Family Deviation Alerts Feed',
+        icon: '🔔',
+        color: '#F59E0B',
+        desc: 'Immediate notifications if a family member departs their approved corridor.'
+      },
+      {
+        id: 'contacts',
+        title: 'Family Emergency Directory',
+        icon: '📇',
+        color: '#38BDF8',
+        desc: 'Manage school dispatch contacts, family phone numbers, and emergency escalation.'
+      },
+      {
+        id: 'timeline',
+        title: 'Family Journey Audit Log',
+        icon: '◷',
+        color: '#64748B',
+        desc: 'Review historical transit milestones and check-in verifications.'
+      }
+    ];
+  } else if (currentRole === 'organization') {
+    if (orgPermission === 'admin') {
+      features = [
+        {
+          id: 'admin-monitor',
+          title: 'Organization Command Center',
+          icon: '🖥️',
+          color: '#38BDF8',
+          desc: 'Fleet-wide live Leaflet monitoring map, active traveler KPIs, and operational status.'
+        },
+        {
+          id: 'routes',
+          title: 'Safe Routes & Corridor Editor',
+          icon: '🛤️',
+          color: '#10B981',
+          desc: 'Configure approved waypoints, adjust buffer widths (50m–500m), and set escalation timeouts.'
+        },
+        {
+          id: 'members',
+          title: 'Member & Staff Roster',
+          icon: '👥',
+          color: '#818CF8',
+          desc: 'Issue single-use 7-day cryptographic invite tokens and manage staff assignments.'
+        },
+        {
+          id: 'alerts',
+          title: 'Incident Logs & Compliance Audit',
+          icon: '📋',
+          color: '#EC4899',
+          desc: 'Immutable records of corridor breaches, check-in confirmations, and emergency triggers.'
+        },
+        {
+          id: 'ai-telemetry',
+          title: 'AI Risk Engine Telemetry',
+          icon: '🧠',
+          color: '#F59E0B',
+          desc: 'Real-time breakdown of all 6 contextual signals with transparent formula weights.'
+        },
+        {
+          id: 'timeline',
+          title: 'Enterprise Audit History',
+          icon: '◷',
+          color: '#64748B',
+          desc: 'Chronological timeline of fleet milestones, deviations, and dispatch actions.'
+        }
+      ];
+    } else {
+      features = [
+        {
+          id: 'staff-dashboard',
+          title: 'Assigned Fleet Operations',
+          icon: '🎒',
+          color: '#38BDF8',
+          desc: 'Live corridor monitoring and risk telemetry for travelers assigned to your group.'
+        },
+        {
+          id: 'alerts',
+          title: 'Assigned Incidents Feed',
+          icon: '📋',
+          color: '#F59E0B',
+          desc: 'Review and acknowledge deviation check-in alerts for your assigned travelers.'
+        },
+        {
+          id: 'timeline',
+          title: 'Operational Audit History',
+          icon: '◷',
+          color: '#64748B',
+          desc: 'Chronological transit records for assigned traveler groups.'
+        }
+      ];
+    }
   }
 
-  const roleTitle = roleId === 'organization'
-    ? (orgPermission === 'admin' ? 'Organization Administrator' : 'Organization Staff')
-    : roleMeta.title;
-
   return (
-    <div className="srg-workspace-container">
-      {/* Top Header & Back Button */}
-      <div className="srg-workspace-topbar">
-        <button type="button" className="srg-btn srg-btn-outline srg-btn-sm" onClick={onBackToRoles}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <line x1="19" y1="12" x2="5" y2="12"/>
-            <polyline points="12 19 5 12 12 5"/>
-          </svg>
-          Back to Workspace Selection
-        </button>
-
-        <div className="srg-workspace-role-tag">
-          <span style={{ fontSize: '1.2rem', marginRight: '0.4rem' }}>{roleMeta.icon}</span>
-          <span style={{ fontWeight: '700', color: '#FFFFFF' }}>{roleTitle} Workspace</span>
-        </div>
-      </div>
-
-      {/* Hero Role Summary */}
+    <div className="srg-workspace-view">
+      {/* Workspace Header */}
       <div className="srg-workspace-hero">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <div className="srg-workspace-icon-large">
-            <span>{roleMeta.icon}</span>
-          </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.3rem' }}>
+          <span style={{ fontSize: '2rem' }}>{role.icon}</span>
           <div>
-            <h1 className="srg-workspace-title">{roleTitle} Hub</h1>
-            <p className="srg-workspace-desc">{roleMeta.description}</p>
+            <h1 style={{ fontSize: '1.75rem', fontWeight: '900', color: '#FFFFFF', margin: 0 }}>
+              {role.title} {currentRole === 'organization' ? `(${orgPermission === 'admin' ? 'Administrator' : 'Staff'})` : ''}
+            </h1>
+            <span style={{ fontSize: '0.84rem', color: '#94A3B8' }}>{role.tagline}</span>
           </div>
         </div>
-
-        {/* Quick Active Traveler Indicator */}
-        {activeScenario && (
-          <div className="srg-workspace-active-pill">
-            <span>Active Journey:</span>
-            <b>{activeScenario.avatar} {activeScenario.travelerName}</b>
-            <span style={{ color: '#94A3B8' }}>({activeScenario.routeName})</span>
-          </div>
-        )}
-      </div>
-
-      {/* Section Header */}
-      <div style={{ marginBottom: '1.25rem' }}>
-        <h2 style={{ fontSize: '1.15rem', fontWeight: '800', color: '#FFFFFF' }}>
-          Select a Safety Feature or Monitoring Tool
-        </h2>
-        <p style={{ fontSize: '0.85rem', color: '#94A3B8' }}>
-          Click any card below to launch its dedicated monitoring dashboard, intelligence feed, or administration tool.
-        </p>
       </div>
 
       {/* Feature Cards Grid */}
-      <div className="srg-feature-cards-grid">
-        {featureList.map(feat => (
-          <button
-            key={feat.id}
-            type="button"
+      <div className="srg-features-grid">
+        {features.map((f) => (
+          <div
+            key={f.id}
             className="srg-feature-card"
-            onClick={() => onLaunchFeature(roleId, feat.id)}
-            aria-label={`Open ${feat.title}`}
+            onClick={() => onSelectFeature(f.id)}
           >
-            <div className="srg-feature-card-header">
-              <div
-                className="srg-feature-icon-box"
-                style={{ background: `${feat.color}20`, color: feat.color, borderColor: `${feat.color}40` }}
-              >
-                <span style={{ fontSize: '1.5rem' }}>{feat.icon}</span>
-              </div>
-              <span
-                className="srg-feature-tag"
-                style={{ color: feat.color, borderColor: `${feat.color}40`, background: `${feat.color}15` }}
-              >
-                {feat.tag}
-              </span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
+              <span style={{ fontSize: '2rem' }}>{f.icon}</span>
+              <span style={{ color: f.color, fontSize: '0.85rem' }}>→</span>
             </div>
-
-            <h3 className="srg-feature-title">{feat.title}</h3>
-            <p className="srg-feature-desc">{feat.desc}</p>
-
-            <div className="srg-feature-card-footer">
-              <span style={{ color: feat.color, fontWeight: '700', fontSize: '0.85rem' }}>
-                Launch Tool →
-              </span>
-            </div>
-          </button>
+            <h3 style={{ fontSize: '1.05rem', fontWeight: '800', color: '#FFFFFF', marginBottom: '0.4rem' }}>
+              {f.title}
+            </h3>
+            <p style={{ fontSize: '0.82rem', color: '#CBD5E1', lineHeight: '1.45' }}>
+              {f.desc}
+            </p>
+          </div>
         ))}
       </div>
     </div>

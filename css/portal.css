@@ -1,121 +1,328 @@
-/* Login, role navigation, and focused feature pages */
-.srg-login-page{min-height:100vh;display:grid;grid-template-columns:minmax(420px,1.1fr) minmax(420px,.9fr);background:#F7FAFE}
-.srg-login-story{position:relative;overflow:hidden;padding:clamp(2rem,6vw,5rem);display:flex;flex-direction:column;color:#fff;background:linear-gradient(145deg,#123B75,#1D65A8 52%,#168C91)}
-.srg-login-story:after{content:'';position:absolute;width:36rem;height:36rem;border-radius:50%;right:-14rem;bottom:-19rem;background:rgba(255,255,255,.1)}
-.srg-login-brand{display:flex;align-items:center;gap:.65rem;font-size:1.1rem;font-weight:800}
-.srg-login-shield{width:39px;height:39px;display:grid;place-items:center;border-radius:12px;background:rgba(255,255,255,.16);font-size:1.35rem}
-.srg-login-story-copy{max-width:540px;margin:auto 0 1.2rem}
-.srg-login-eyebrow{letter-spacing:.11em;font-size:.71rem;font-weight:800;color:#4BBCE7;margin-bottom:.7rem}
-.srg-login-story .srg-login-eyebrow{color:#9EE9E6}
-.srg-login-story h1{font-size:clamp(2.4rem,5vw,4.4rem);line-height:1.05;letter-spacing:-.05em}
-.srg-login-story h1 em{display:block;color:#B5F3EC;font-style:normal}
-.srg-login-story-copy>p:last-child{max-width:430px;margin-top:1.3rem;color:#DCEEFF;font-size:1.04rem;line-height:1.65}
-.srg-login-map-art{height:210px;max-width:560px;border:1px solid rgba(255,255,255,.24);border-radius:24px;background:linear-gradient(145deg,rgba(255,255,255,.12),rgba(5,32,75,.18));position:relative;overflow:hidden}
-.srg-login-map-art:before,.srg-login-map-art:after{content:'';position:absolute;background:rgba(255,255,255,.08);border-radius:999px;transform:rotate(-28deg)}
-.srg-login-map-art:before{width:440px;height:38px;left:-70px;top:80px}
-.srg-login-map-art:after{width:320px;height:25px;right:-20px;bottom:42px}
-.srg-map-art-route{position:absolute;left:18%;top:37%;width:61%;height:74px;border:5px solid #A6F5EA;border-color:#A6F5EA transparent transparent #A6F5EA;border-radius:80px 0 0 0;transform:rotate(-8deg)}
-.srg-map-art-pin{position:absolute;font-size:1.75rem;color:#fff;text-shadow:0 4px 12px rgba(0,0,0,.28)}
-.srg-map-art-pin.one{left:19%;top:58%}
-.srg-map-art-pin.two{right:20%;top:23%;color:#A6F5EA}
-.srg-map-art-card{position:absolute;right:18px;bottom:18px;padding:.45rem .7rem;border-radius:9px;background:rgba(255,255,255,.94);color:#0E527D;font-size:.75rem;font-weight:800}
-.srg-login-story>small{margin-top:1.25rem;position:relative;z-index:1;color:#B8D9EF;font-size:.72rem}
-.srg-login-main{display:grid;place-items:center;padding:2rem;overflow-y:auto}
-.srg-login-card{width:min(440px,100%);background:#fff;padding:2rem;border-radius:20px;border:1px solid #DCE6F1;box-shadow:var(--shadow-md)}
-.srg-login-mobile-brand{display:none}
-.srg-login-subtitle{color:#60738D;margin:.4rem 0 1.2rem;font-size:.86rem;line-height:1.45}
-.srg-login-card label{display:grid;gap:.45rem;color:#3E5876;font-size:.82rem;font-weight:800;margin:.85rem 0}
-.srg-login-card input,.srg-login-card select{width:100%;border:1px solid #CAD9E9;background:#F8FAFC;border-radius:10px;padding:.75rem .9rem;color:#172A46;outline:0;font-size:.88rem;transition:border-color .15s}
-.srg-login-card input:focus,.srg-login-card select:focus{border-color:#3198D0;background:#fff;box-shadow:0 0 0 4px rgba(49,152,208,.12)}
-.srg-login-continue,.srg-login-demo{width:100%;min-height:44px}
-.srg-login-error{display:flex;align-items:center;gap:.5rem;color:#C24145;background:#FFF0F1;padding:.7rem;border-radius:8px;font-size:.8rem;border:1px solid #FECDCE;margin-top:.75rem}
-.srg-login-success{display:flex;align-items:center;gap:.5rem;color:#15803D;background:#F0FDF4;padding:.7rem;border-radius:8px;font-size:.8rem;border:1px solid #BBF7D0;margin-top:.75rem}
-.srg-login-divider{display:flex;align-items:center;gap:.75rem;color:#8B9CB0;font-size:.76rem;margin:1.1rem 0}
-.srg-login-divider:before,.srg-login-divider:after{content:'';height:1px;background:#DCE6F1;flex:1}
-.srg-login-terms{text-align:center;color:#8B9CB0;font-size:.72rem;margin-top:1rem;line-height:1.4}
+/**
+ * SafeRoute Guardian - Portal Stylesheet (v2.0)
+ * Split-Panel Authentication, 3-Role Workspace Hub, Parent/Staff Dashboards, and Access Denied Screens.
+ */
 
-/* Auth Tabs & Google OAuth Button */
-.srg-auth-tabs{display:flex;gap:.35rem;background:#F1F5F9;padding:.3rem;border-radius:12px}
-.srg-auth-tab{flex:1;border:0;background:transparent;padding:.55rem .8rem;border-radius:8px;font-weight:700;font-size:.82rem;color:#64748B;cursor:pointer;transition:all .15s}
-.srg-auth-tab.active{background:#fff;color:#0F172A;box-shadow:0 2px 6px rgba(0,0,0,.08)}
-.srg-google-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:.75rem;background:#fff;border:1px solid #CBD5E1;color:#1E293B;font-weight:700;padding:.7rem 1rem;border-radius:10px;font-size:.88rem;cursor:pointer;transition:all .15s}
-.srg-google-btn:hover{background:#F8FAFC;border-color:#94A3B8;box-shadow:0 2px 8px rgba(0,0,0,.06)}
-.srg-password-input-wrap{position:relative;display:flex;align-items:center}
-.srg-password-input-wrap input{padding-right:2.8rem}
-.srg-pwd-toggle{position:absolute;right:.5rem;border:0;background:transparent;padding:.35rem;cursor:pointer;font-size:1rem;border-radius:6px}
-.srg-link-btn{border:0;background:transparent;color:#2563EB;font-size:.78rem;font-weight:700;cursor:pointer;padding:0}
-.srg-link-btn:hover{text-decoration:underline}
-
-/* Sidebar & Navigation Layout */
-.srg-app-shell{min-height:100vh;background:#F5F8FC}
-.srg-app-content{min-height:100vh;margin-left:260px}
-.srg-role-select-content{margin-left:0}
-.srg-role-sidebar{position:fixed;left:0;top:0;bottom:0;width:260px;z-index:2000;display:flex;flex-direction:column;background:#fff;border-right:1px solid #DCE6F1;padding:1.2rem .8rem}
-.srg-side-brand{display:flex;align-items:center;gap:.6rem;padding:.45rem .6rem 1.3rem;color:#19385F;font-size:1.05rem}
-.srg-side-role{display:flex;align-items:center;gap:.65rem;padding:.8rem;border-radius:14px;background:#F0F7FF;margin-bottom:1rem}
-.srg-role-sidebar nav button{border:0;background:transparent;color:#5B7088;text-align:left;padding:.62rem .7rem;border-radius:9px;display:flex;align-items:center;gap:.7rem;cursor:pointer;font-size:.79rem}
-.srg-role-sidebar nav button:hover{background:#F3F7FC;color:#1E5F95}
-.srg-role-sidebar nav button.active{background:#E7F3FF;color:#17699E;font-weight:700}
-.srg-side-profile{position:relative;margin-top:auto;border-top:1px solid #E3EAF2;padding-top:.75rem}
-.srg-profile-trigger{width:100%;border:0;background:transparent;display:flex;align-items:center;gap:.65rem;padding:.55rem;border-radius:10px;text-align:left;cursor:pointer;color:#273E5B}
-.srg-profile-trigger:hover{background:#F5F8FC}
-.srg-profile-menu{position:absolute;left:0;right:0;bottom:calc(100% + .35rem);padding:.4rem;background:#fff;border:1px solid #DCE6F1;border-radius:10px;box-shadow:var(--shadow-md);z-index:2100}
-.srg-profile-menu button{width:100%;border:0;background:transparent;text-align:left;padding:.55rem .65rem;color:#405B78;border-radius:6px;cursor:pointer;font-size:.76rem;font-weight:600}
-.srg-profile-menu button:hover{background:#F2F7FC;color:#17699E}
-.srg-mobile-nav{display:none}
-
-/* Focused Feature Pages */
-.srg-page-heading{display:flex;align-items:center;gap:1rem;margin-bottom:1.4rem}
-.srg-feature-page{max-width:1180px;margin:0 auto;padding:1.2rem}
-.srg-purpose-card{display:flex;gap:1rem;align-items:flex-start;padding:1.7rem;border:1px solid #D7E6F2;border-radius:18px;background:linear-gradient(125deg,#EFF7FF,#fff 55%,#F3FBFA);box-shadow:var(--shadow-sm)}
-.srg-purpose-card>span{display:grid;place-items:center;width:54px;height:54px;flex:0 0 auto;background:#DDF1FF;border-radius:15px;font-size:1.55rem}
-.srg-purpose-card h2{color:#172A46;font-size:1.2rem}
-.srg-purpose-card p{color:#60738D;margin-top:.35rem}
-.srg-purpose-note{font-size:.8rem;color:#1E3857;margin-top:.6rem}
-.srg-empty-state{margin-top:1rem;padding:1.6rem;text-align:center;background:#fff;border:1px dashed #BDD3E7;border-radius:14px;color:#60738D}
-.srg-empty-state b{display:block;color:#294A6D;margin-bottom:.3rem}
-.srg-empty-state .srg-btn{margin-top:.8rem}
-
-/* Onboarding Modal */
-.srg-modal-backdrop{position:fixed;top:0;left:0;right:0;bottom:0;z-index:3000;background:rgba(15,23,42,.75);backdrop-filter:blur(8px);display:grid;place-items:center;padding:1rem;overflow-y:auto}
-.srg-onboarding-card{width:min(720px,100%);background:#fff;border-radius:24px;box-shadow:0 24px 60px rgba(0,0,0,.25);border:1px solid #E2E8F0;overflow:hidden}
-.srg-onboarding-header{padding:1.5rem 1.8rem;background:linear-gradient(135deg,#F8FAFC,#EEF2F6);border-bottom:1px solid #E2E8F0}
-.srg-onboarding-body{padding:1.8rem}
-.srg-onboarding-roles-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin:1.2rem 0}
-.srg-onboarding-role-card{display:flex;flex-direction:column;text-align:left;border:2px solid #E2E8F0;background:#fff;border-radius:16px;padding:1.2rem;cursor:pointer;transition:all .2s}
-.srg-onboarding-role-card:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.06)}
-.srg-onboarding-role-card.selected{border-color:#2563EB;background:#F0F7FF;box-shadow:0 8px 24px rgba(37,99,235,.14)}
-.srg-onboarding-role-top{display:flex;align-items:center;justify-content:space-between}
-.srg-onboarding-badge{font-size:.68rem;font-weight:800;padding:.2rem .5rem;border-radius:999px;letter-spacing:.03em}
-.srg-onboarding-footer{display:flex;justify-content:flex-end;align-items:center;gap:.8rem;margin-top:1.5rem;padding-top:1.2rem;border-top:1px solid #F1F5F9}
-
-/* Access Denied View */
-.srg-access-denied-container{min-height:70vh;display:grid;place-items:center;padding:2rem}
-.srg-access-denied-card{max-width:540px;background:#fff;border-radius:22px;border:1px solid #E2E8F0;padding:2.5rem;text-align:center;box-shadow:var(--shadow-md)}
-.srg-access-denied-icon{font-size:3.2rem;margin-bottom:.8rem}
-.srg-access-denied-badge{display:inline-block;padding:.25rem .75rem;background:#FEE2E2;color:#DC2626;font-size:.72rem;font-weight:800;border-radius:999px;letter-spacing:.08em;margin-bottom:.8rem}
-.srg-access-denied-title{font-size:1.65rem;font-weight:800;color:#1E293B;letter-spacing:-.03em}
-.srg-access-denied-desc{font-size:.9rem;color:#64748B;line-height:1.6;margin:.8rem 0 1.5rem}
-.srg-access-denied-details{background:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px;padding:1rem;font-size:.82rem;display:grid;gap:.5rem;text-align:left}
-.srg-access-denied-row{display:flex;justify-content:space-between;color:#475569}
-
-@media(max-width:900px){
-  .srg-login-page{grid-template-columns:1fr}
-  .srg-login-story{min-height:280px;padding:2rem}
-  .srg-login-story-copy{margin:auto 0 0}
-  .srg-login-story h1{font-size:2.4rem}
-  .srg-login-map-art{display:none}
-  .srg-app-content{margin-left:0;padding-bottom:72px}
-  .srg-role-sidebar{display:none}
-  .srg-mobile-nav{position:fixed;z-index:3000;left:0;right:0;bottom:0;height:68px;display:flex;align-items:center;justify-content:space-around;background:rgba(255,255,255,.96);border-top:1px solid #DCE6F1;backdrop-filter:blur(14px)}
-  .srg-mobile-nav button{border:0;background:transparent;color:#60738D;display:grid;place-items:center;gap:2px;padding:.35rem;min-width:48px;cursor:pointer}
-  .srg-mobile-nav button span{font-size:1.05rem}
-  .srg-mobile-nav button small{font-size:.58rem}
-  .srg-mobile-nav button.active{color:#1972AA;font-weight:700}
+/* Split-Panel Authentication Layout */
+.srg-auth-page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+  background: radial-gradient(circle at top right, #1E293B 0%, #0A192F 100%);
 }
-@media(max-width:600px){
-  .srg-login-main{padding:1.5rem 1rem}
-  .srg-login-card{padding:1.5rem}
-  .srg-login-story{display:none}
-  .srg-login-mobile-brand{display:block;color:#1C5387;font-weight:800;margin-bottom:1.5rem;font-size:1.1rem}
+
+.srg-auth-container {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  max-width: 960px;
+  width: 100%;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+}
+
+@media (max-width: 840px) {
+  .srg-auth-container {
+    grid-template-columns: 1fr;
+  }
+  .srg-auth-brand-panel {
+    display: none;
+  }
+}
+
+.srg-auth-brand-panel {
+  padding: 2.5rem;
+  background: linear-gradient(145deg, rgba(37, 99, 235, 0.15) 0%, rgba(15, 23, 42, 0.9) 100%);
+  border-right: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+}
+
+.srg-auth-brand-header {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.srg-auth-card {
+  padding: 2.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.srg-sim-banner {
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  color: #FCD34D;
+  padding: 0.5rem 0.8rem;
+  border-radius: 8px;
+  font-size: 0.76rem;
+  margin-bottom: 1.2rem;
+  text-align: center;
+}
+
+.srg-auth-tabs {
+  display: flex;
+  gap: 0.4rem;
+  background: #0F172A;
+  padding: 0.3rem;
+  border-radius: 10px;
+  border: 1px solid #1E293B;
+  margin-bottom: 1.25rem;
+}
+
+.srg-auth-tab {
+  flex: 1;
+  padding: 0.5rem;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: var(--text-muted);
+  font-weight: 700;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.srg-auth-tab.active {
+  background: var(--color-brand-deep);
+  color: #FFFFFF;
+}
+
+.srg-auth-error {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #FCA5A5;
+  padding: 0.6rem 0.8rem;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  margin-bottom: 1rem;
+}
+
+.srg-auth-info {
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  color: #6EE7B7;
+  padding: 0.6rem 0.8rem;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  margin-bottom: 1rem;
+}
+
+.srg-google-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.75rem;
+  background: #FFFFFF;
+  color: #1F2937;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.srg-google-btn:hover {
+  background: #F9FAFB;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.srg-auth-divider {
+  display: flex;
+  align-items: center;
+  margin: 1.2rem 0;
+  color: var(--text-muted);
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.srg-auth-divider::before,
+.srg-auth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #1E293B;
+}
+
+.srg-auth-divider span {
+  padding: 0 0.6rem;
+}
+
+.srg-auth-card label {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  margin-bottom: 0.85rem;
+}
+
+.srg-auth-card input {
+  width: 100%;
+  padding: 0.65rem 0.85rem;
+  background: #0F172A;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  color: #FFFFFF;
+  font-size: 0.88rem;
+  margin-top: 0.25rem;
+}
+
+.srg-auth-card input:focus {
+  outline: none;
+  border-color: var(--color-brand);
+}
+
+.srg-pw-toggle {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+  color: var(--text-muted);
+}
+
+/* Landing & Role Selection Grid */
+.srg-landing-view {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.srg-landing-hero {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.srg-roles-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.5rem;
+}
+
+.srg-role-selection-card {
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(12px);
+  border: 2px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 1.75rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.srg-role-selection-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.5);
+}
+
+.srg-role-selection-card.active {
+  box-shadow: 0 0 25px rgba(56, 189, 248, 0.2);
+}
+
+/* Workspace Features Grid */
+.srg-features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.25rem;
+}
+
+.srg-feature-card {
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.srg-feature-card:hover {
+  border-color: var(--color-brand);
+  background: rgba(30, 41, 59, 0.8);
+  transform: translateY(-2px);
+}
+
+/* Parent Dashboard Specifics */
+.srg-parent-hero-card,
+.srg-staff-hero-card {
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.srg-parent-dependents-list {
+  display: flex;
+  gap: 0.85rem;
+  margin-top: 1.2rem;
+  overflow-x: auto;
+  padding-bottom: 0.4rem;
+}
+
+.srg-dependent-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: #0F172A;
+  border: 1px solid #1E293B;
+  border-radius: 12px;
+  min-width: 220px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.srg-dependent-pill.active {
+  border-color: var(--color-safe);
+  background: rgba(16, 185, 129, 0.1);
+}
+
+/* Filter Buttons in Staff Dashboard */
+.srg-filter-btn {
+  padding: 0.35rem 0.65rem;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.srg-filter-btn.active {
+  background: var(--color-brand);
+  color: #0F172A;
+}
+
+/* Access Denied Card */
+.srg-access-denied-view {
+  min-height: 60vh;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  padding: 1.5rem;
+}
+
+.srg-access-denied-card {
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid #334155;
+  border-radius: var(--radius-xl);
+  padding: 2.5rem;
+  max-width: 500px;
+  width: 100%;
 }

@@ -1,179 +1,197 @@
 /**
- * SafeRoute Guardian - Role-Selection Screen (3 Core Modes)
- * Presents the 3 distinct user workspaces: Tourist, Parent/Guardian, Organization.
- * For Organization, highlights the Administrator & Staff permission levels.
+ * SafeRoute Guardian - Role Selection & Workspace Switcher
+ * Presents exactly 3 top-level modes: Tourist, Parent/Guardian, and Organization.
+ * Displays scenario presets and permission tier breakdowns.
  */
 
 window.LandingSection = function({
   onSelectRole,
+  activeRole = 'tourist',
+  orgPermission = 'admin',
+  onSelectOrgPermission,
   scenarios = [],
   activeScenario,
-  onSelectScenario,
-  currentUser
+  onSelectScenario
 }) {
   const roles = [
     {
       id: 'tourist',
-      title: 'Tourist',
+      title: 'Tourist & Solo Traveler',
       icon: '🧳',
-      badge: 'Individual Traveler',
+      badge: 'Personal Safety',
       color: '#38BDF8',
-      cardClass: 'srg-role-card-tourist',
-      description: 'Explore destinations safely with weather intelligence, connectivity dead-zone maps, community safety reviews, and personal live journey protection.',
-      highlights: [
-        'Explore Safely destination AI intelligence',
-        'Fastest vs Safer route comparison & weather warnings',
-        'Crowdsourced Community Reviews & Trusted Safe Spots',
-        'Emergency SOS 3s hold & mobile shake gesture'
+      desc: 'AI safety scores, fastest vs safer route comparison, live weather warnings, cellular dead-zone intelligence, community reviews, and safe havens.',
+      features: [
+        'Explore Safely AI Intelligence',
+        'Fastest vs Safer Route Comparison',
+        'Personal GPS Corridor Tracking',
+        '3s SOS & 3-Shake Gesture Panic',
+        'Safe Beacon Offline Mode',
+        'Local Help Network Requests'
       ]
     },
     {
       id: 'parent',
-      title: 'Parent / Guardian',
+      title: 'Parent / Family Guardian',
       icon: '👨‍👩‍👧',
       badge: 'Family Safety',
       color: '#10B981',
-      cardClass: 'srg-role-card-parent',
-      description: 'Monitor your child or family member along approved school or activity corridors with real-time deviation alerts and family check-ins.',
-      highlights: [
-        'Live Leaflet map & dependent corridor tracking',
-        'Real-time child status, risk gauge & Safe Beacon',
-        'Corridor deviation alerts & check-in timeline',
-        'Direct family emergency network contacts'
+      desc: 'Monitor verified linked children and family dependents with real-time route corridors, deviation alerts, battery telemetry, and safe beacon updates.',
+      features: [
+        'Linked Dependents Live Monitor',
+        'Consent-Based Family Linking',
+        'School Corridor Deviation Feeds',
+        'Last Safe Beacon Tracking',
+        'Family Emergency Directory',
+        'Chronological Incident History'
       ]
     },
     {
       id: 'organization',
-      title: 'School / Organization',
+      title: 'School / Enterprise Organization',
       icon: '🏢',
-      badge: 'Enterprise & School Ops',
+      badge: 'Enterprise Command',
       color: '#F59E0B',
-      cardClass: 'srg-role-card-org',
-      description: 'Centralized safety command center for tour operators, educational institutions, field teams, and safety coordinators.',
-      highlights: [
-        'Staff View: Assigned travelers & incident resolution',
-        'Admin View: Organization command center & roster',
-        'Manage routes, corridor buffers & escalation timeouts',
-        'Explainable AI Risk Engine telemetry & simulation controls'
+      desc: 'Operational safety center for schools, tour operators, and enterprises. Includes Staff operational monitoring and Administrator command tools.',
+      features: [
+        'Organization Command Center',
+        'Staff Roster & Member Management',
+        'Custom Route & Corridor Width Editor',
+        'Escalation Timeout Thresholds',
+        'Explainable AI Risk Telemetry',
+        'Emergency Simulation Suite (Demo)'
       ]
     }
   ];
 
   return (
-    <div className="srg-landing-container">
-      {/* Hero Header */}
-      <section className="srg-landing-hero">
-        <div className="srg-hero-badge">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <circle cx="12" cy="12" r="10"/>
-            <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>
-          </svg>
-          SafeRoute Guardian • AI Corridor Safety Platform
+    <div className="srg-landing-view">
+      {/* Hero Welcome Banner */}
+      <div className="srg-landing-hero">
+        <div style={{ fontSize: '0.76rem', color: '#38BDF8', fontWeight: '800', letterSpacing: '0.08em', marginBottom: '0.3rem' }}>
+          AI-POWERED CORRIDOR PROTECTION PLATFORM
         </div>
-
-        <h1 className="srg-hero-title">
-          Select Your <span>Safety Workspace</span>
+        <h1 style={{ fontSize: '2.2rem', fontWeight: '900', color: '#FFFFFF', margin: '0 0 0.6rem 0' }}>
+          Select Safety Workspace Mode
         </h1>
-
-        <p className="srg-hero-subtitle">
-          Experience AI-assisted route geofences, proactive check-ins, and multi-channel emergency escalations tailored to your operational role.
+        <p style={{ fontSize: '0.95rem', color: '#94A3B8', maxWidth: '650px', margin: '0 auto' }}>
+          SafeRoute Guardian provides purpose-built workspaces for travelers, parents, and organizations with strict Role-Based Access Control.
         </p>
-      </section>
+      </div>
 
       {/* 3 Main Role Cards Grid */}
-      <section className="srg-role-cards-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))' }}>
-        {roles.map((role) => (
-          <div
-            key={role.id}
-            className={`srg-role-card ${role.cardClass}`}
-            style={{ borderTop: `4px solid ${role.color}` }}
-          >
-            <div className="srg-role-card-header">
-              <div className="srg-role-icon-box" style={{ background: `${role.color}15`, color: role.color }}>
-                <span style={{ fontSize: '1.85rem' }}>{role.icon}</span>
-              </div>
-              <span className="srg-role-badge" style={{ background: `${role.color}15`, color: role.color }}>
-                {role.badge}
-              </span>
-            </div>
-
-            <h2 className="srg-role-title" style={{ fontSize: '1.35rem', fontWeight: '800' }}>
-              {role.title}
-            </h2>
-            <p className="srg-role-description">{role.description}</p>
-
-            <div className="srg-role-highlights">
-              <div className="srg-highlights-label">CORE CAPABILITIES</div>
-              <ul>
-                {role.highlights.map((h, i) => (
-                  <li key={i}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={role.color} strokeWidth="3">
-                      <polyline points="20 6 9 17 4 12"/>
-                    </svg>
-                    <span>{h}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <button
-              type="button"
-              className="srg-btn srg-btn-primary srg-role-select-btn"
-              onClick={() => onSelectRole(role.id)}
-              style={{ background: role.color, borderColor: role.color }}
+      <div className="srg-roles-grid">
+        {roles.map((r) => {
+          const isSelected = activeRole === r.id;
+          return (
+            <div
+              key={r.id}
+              className={`srg-role-selection-card ${isSelected ? 'active' : ''}`}
+              style={{ borderColor: isSelected ? r.color : '#1E293B' }}
+              onClick={() => onSelectRole(r.id)}
             >
-              <span>Launch {role.title} Workspace</span>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <line x1="5" y1="12" x2="19" y2="12"/>
-                <polyline points="12 5 19 12 12 19"/>
-              </svg>
-            </button>
-          </div>
-        ))}
-      </section>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.8rem' }}>
+                <span style={{ fontSize: '2.4rem' }}>{r.icon}</span>
+                <span style={{ fontSize: '0.72rem', padding: '0.2rem 0.6rem', borderRadius: '999px', background: `${r.color}20`, color: r.color, fontWeight: '800' }}>
+                  {r.badge}
+                </span>
+              </div>
 
-      {/* Preset Journey Scenarios Switcher */}
-      <section className="srg-scenarios-strip">
-        <div className="srg-scenarios-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-            <span style={{ fontSize: '1.25rem' }}>🧭</span>
-            <div>
-              <h3 style={{ fontSize: '1.05rem', fontWeight: '800', color: '#FFFFFF' }}>Preset Journey Scenarios</h3>
-              <p style={{ fontSize: '0.8rem', color: '#94A3B8' }}>Select a pre-configured journey route to inspect route geometry and geofences</p>
-            </div>
-          </div>
-        </div>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: '800', color: '#FFFFFF', marginBottom: '0.5rem' }}>
+                {r.title}
+              </h2>
+              <p style={{ fontSize: '0.84rem', color: '#CBD5E1', lineHeight: '1.5', marginBottom: '1.2rem', minHeight: '52px' }}>
+                {r.desc}
+              </p>
 
-        <div className="srg-scenarios-grid">
-          {scenarios.map((sc) => {
-            const isSelected = activeScenario && activeScenario.id === sc.id;
-            return (
-              <button
-                key={sc.id}
-                type="button"
-                className={`srg-scenario-card ${isSelected ? 'active' : ''}`}
-                onClick={() => onSelectScenario(sc)}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '0.4rem' }}>
-                  <span style={{ fontSize: '1.4rem' }}>{sc.avatar}</span>
-                  <div style={{ textAlign: 'left' }}>
-                    <div style={{ fontWeight: '800', color: '#FFFFFF', fontSize: '0.9rem' }}>{sc.travelerName}</div>
-                    <div style={{ fontSize: '0.74rem', color: '#38BDF8' }}>{sc.travelerRole}</div>
+              {/* Organization Internal Permission Selector if Selected */}
+              {r.id === 'organization' && isSelected && (
+                <div style={{ background: '#0F172A', border: '1px solid #334155', borderRadius: '10px', padding: '0.75rem', marginBottom: '1rem' }} onClick={(e) => e.stopPropagation()}>
+                  <span style={{ fontSize: '0.72rem', color: '#94A3B8', fontWeight: '800', display: 'block', marginBottom: '0.4rem' }}>
+                    ORGANIZATION PERMISSION TIER:
+                  </span>
+                  <div style={{ display: 'flex', gap: '0.4rem' }}>
+                    <button
+                      type="button"
+                      className={`srg-btn srg-btn-sm ${orgPermission === 'admin' ? 'srg-btn-primary' : 'srg-btn-outline'}`}
+                      style={{ flex: 1, fontSize: '0.74rem' }}
+                      onClick={() => onSelectOrgPermission && onSelectOrgPermission('admin')}
+                    >
+                      👑 Admin
+                    </button>
+                    <button
+                      type="button"
+                      className={`srg-btn srg-btn-sm ${orgPermission === 'staff' ? 'srg-btn-primary' : 'srg-btn-outline'}`}
+                      style={{ flex: 1, fontSize: '0.74rem' }}
+                      onClick={() => onSelectOrgPermission && onSelectOrgPermission('staff')}
+                    >
+                      🛡️ Staff
+                    </button>
                   </div>
                 </div>
-                <div style={{ fontSize: '0.78rem', color: '#CBD5E1', textAlign: 'left' }}>
-                  📍 {sc.routeName}
-                </div>
-                <div style={{ display: 'flex', gap: '0.6rem', marginTop: '0.45rem', fontSize: '0.7rem', color: '#94A3B8' }}>
-                  <span>Buffer: <b>{sc.corridorWidthMeters}m</b></span>
-                  <span>•</span>
-                  <span>Timeout: <b>{sc.escalationTimeoutMinutes}m</b></span>
-                </div>
+              )}
+
+              {/* Feature Highlights */}
+              <div style={{ display: 'grid', gap: '0.35rem', marginBottom: '1.4rem' }}>
+                {r.features.map((f, idx) => (
+                  <div key={idx} style={{ fontSize: '0.76rem', color: '#94A3B8', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                    <span style={{ color: r.color }}>✓</span>
+                    <span>{f}</span>
+                  </div>
+                ))}
+              </div>
+
+              <button
+                type="button"
+                className="srg-btn srg-btn-primary"
+                style={{ width: '100%', background: isSelected ? r.color : '#1E293B', borderColor: isSelected ? r.color : '#334155', color: '#FFFFFF' }}
+                onClick={(e) => { e.stopPropagation(); onSelectRole(r.id); }}
+              >
+                {isSelected ? 'Enter Workspace →' : 'Select Mode'}
               </button>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Demo Journey Scenarios Selector */}
+      <div style={{ marginTop: '2.5rem', background: 'var(--bg-card-dark)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-lg)', padding: '1.5rem' }}>
+        <h3 style={{ fontSize: '1.15rem', fontWeight: '800', color: '#FFFFFF', marginBottom: '0.4rem' }}>
+          Explore Verified Journey Scenarios
+        </h3>
+        <p style={{ fontSize: '0.84rem', color: '#94A3B8', marginBottom: '1.2rem' }}>
+          Switch between pre-configured corridor presets to test student commutes, tourist walks, and night hospital shifts.
+        </p>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
+          {scenarios.map((sc) => {
+            const isCurrent = activeScenario && activeScenario.id === sc.id;
+            return (
+              <div
+                key={sc.id}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.85rem',
+                  padding: '1rem',
+                  background: isCurrent ? 'rgba(56, 189, 248, 0.12)' : '#0F172A',
+                  border: `1px solid ${isCurrent ? '#38BDF8' : '#1E293B'}`,
+                  borderRadius: '12px',
+                  cursor: 'pointer'
+                }}
+                onClick={() => onSelectScenario(sc)}
+              >
+                <span style={{ fontSize: '2rem' }}>{sc.avatar}</span>
+                <div>
+                  <b style={{ color: '#FFFFFF', fontSize: '0.94rem' }}>{sc.travelerName}</b>
+                  <div style={{ fontSize: '0.76rem', color: '#38BDF8', marginTop: '2px' }}>{sc.travelerRole}</div>
+                  <div style={{ fontSize: '0.74rem', color: '#94A3B8' }}>{sc.routeName}</div>
+                </div>
+              </div>
             );
           })}
         </div>
-      </section>
+      </div>
     </div>
   );
 };

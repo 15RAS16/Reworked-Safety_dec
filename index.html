@@ -14,7 +14,7 @@
   <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
 
-  <!-- Application Stylesheet -->
+  <!-- Application Stylesheets -->
   <link rel="stylesheet" href="css/style.css" />
   <link rel="stylesheet" href="css/light-theme.css" />
   <link rel="stylesheet" href="css/portal.css" />
@@ -23,7 +23,7 @@
   <!-- React Mount Point -->
   <div id="root">
     <!-- Initial Loading State -->
-    <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; color:#94A3B8; font-family:sans-serif; text-align:center; background:#0F172A;">
+    <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; color:#94A3B8; font-family:sans-serif; text-align:center; background:#0A192F;">
       <div style="font-size:2.5rem; margin-bottom:1rem;">🛡️</div>
       <h2 style="color:#FFFFFF; margin-bottom:0.5rem; font-family:'Plus Jakarta Sans',sans-serif;">SafeRoute Guardian</h2>
       <p style="font-size:0.9rem;">Initializing Role-Based Safety Engine & Live Corridor Map...</p>
@@ -55,6 +55,8 @@
   <script src="js/services/storageService.js"></script>
 
   <!-- React Components (Compiled via Babel) -->
+  <script type="text/babel" src="js/components/RiskGauge.jsx"></script>
+  <script type="text/babel" src="js/components/MapLegend.jsx"></script>
   <script type="text/babel" src="js/components/InteractiveMap.jsx"></script>
   <script type="text/babel" src="js/components/Header.jsx"></script>
   <script type="text/babel" src="js/components/LandingSection.jsx"></script>
@@ -70,6 +72,8 @@
   <script type="text/babel" src="js/components/TrustedSafeSpots.jsx"></script>
   <script type="text/babel" src="js/components/JourneyTimeline.jsx"></script>
   <script type="text/babel" src="js/components/CommunityReviewsView.jsx"></script>
+  <script type="text/babel" src="js/components/ParentDashboard.jsx"></script>
+  <script type="text/babel" src="js/components/StaffDashboard.jsx"></script>
   <script type="text/babel" src="js/components/AdminDashboard.jsx"></script>
   <script type="text/babel" src="js/components/UserDashboard.jsx"></script>
   <script type="text/babel" src="js/components/EmergencyOverlay.jsx"></script>

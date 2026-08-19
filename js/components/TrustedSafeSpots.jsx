@@ -1,7 +1,7 @@
-window.TrustedSafeSpots = function({ riskData = {}, compact = false }) {
+window.TrustedSafeSpots = function({ riskData = {}, compact = false, onBackToWorkspace }) {
   const [filter, setFilter] = React.useState('All');
   const [spot, setSpot] = React.useState(null);
-  const spots = window.SRG_DATA.trustedSafeSpots || [];
+  const spots = (window.SRG_DATA && window.SRG_DATA.trustedSafeSpots) || (window.MockData && window.MockData.trustedSafeSpots) || [];
   const visible = filter === 'All' ? spots : spots.filter(item => item.category === filter);
   const highRisk = riskData.level && ['HIGH_RISK', 'EMERGENCY'].includes(riskData.level.key);
   return <section className={'srg-safe-spots ' + (compact ? 'compact' : '')}>

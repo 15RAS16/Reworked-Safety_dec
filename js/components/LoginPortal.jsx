@@ -61,19 +61,23 @@ window.LoginPortal = function({ onLoginSuccess }) {
   };
 
   // Demo Fast-Pass Personas (Available strictly in isolated Demo Mode)
-  const handleQuickDemoPersona = async (roleType, orgPerm = 'staff') => {
+  const handleQuickDemoPersona = async (roleType, orgPerm = 'staff', isNewUser = false) => {
     setIsLoading(true);
     const demoUser = {
       uid: `demo-${roleType}-${Date.now()}`,
-      displayName: roleType === 'tourist' ? 'Elena Rostova (Tourist)' : roleType === 'parent' ? 'Priya Sharma (Parent)' : 'Marcus Vance (Org Lead)',
+      displayName: isNewUser
+        ? 'New Demo User'
+        : (roleType === 'tourist' ? 'Elena Rostova (Tourist)' : roleType === 'parent' ? 'Priya Sharma (Parent)' : (orgPerm === 'admin' ? 'Marcus Vance (Org Lead)' : 'Sarah Jenkins (Org Staff)')),
       email: `${roleType}@saferoute.demo`,
       emailVerified: true,
       primaryRole: roleType,
-      allowedModes: [roleType],
+      accessType: isNewUser ? null : (roleType === 'organization' ? (orgPerm === 'admin' ? 'admin' : 'staff') : 'self'),
+      allowedModes: isNewUser ? [] : [roleType],
       orgPermission: orgPerm,
       organizationId: roleType === 'organization' ? 'demo-org-1' : null,
+      organizationIds: roleType === 'organization' ? ['demo-org-1'] : [],
       orgName: roleType === 'organization' ? 'Apex Safety Institute' : null,
-      onboardingComplete: true,
+      onboardingComplete: !isNewUser,
       isDemoUser: true
     };
     await window.FirebaseService.saveUserProfile(demoUser.uid, demoUser);
@@ -288,14 +292,14 @@ window.LoginPortal = function({ onLoginSuccess }) {
               <span style={{ fontSize: '0.72rem', color: '#94A3B8', fontWeight: '800', display: 'block', marginBottom: '0.5rem', textAlign: 'center' }}>
                 QUICK EVALUATION DEMO PERSONAS:
               </span>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.4rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.4rem', marginBottom: '0.4rem' }}>
                 <button
                   type="button"
                   className="srg-btn srg-btn-outline srg-btn-sm"
                   style={{ fontSize: '0.72rem', padding: '0.4rem 0.2rem' }}
                   onClick={() => handleQuickDemoPersona('tourist')}
                 >
-                  🧳 Tourist
+                  🧳 Tourist (Returning)
                 </button>
                 <button
                   type="button"
@@ -303,7 +307,7 @@ window.LoginPortal = function({ onLoginSuccess }) {
                   style={{ fontSize: '0.72rem', padding: '0.4rem 0.2rem' }}
                   onClick={() => handleQuickDemoPersona('parent')}
                 >
-                  👨‍👩‍👧 Parent
+                  👨‍👩‍👧 Parent (Returning)
                 </button>
                 <button
                   type="button"
@@ -311,9 +315,25 @@ window.LoginPortal = function({ onLoginSuccess }) {
                   style={{ fontSize: '0.72rem', padding: '0.4rem 0.2rem' }}
                   onClick={() => handleQuickDemoPersona('organization', 'admin')}
                 >
-                  🏢 Org Admin
+                  🏢 Org Admin (Returning)
+                </button>
+                <button
+                  type="button"
+                  className="srg-btn srg-btn-outline srg-btn-sm"
+                  style={{ fontSize: '0.72rem', padding: '0.4rem 0.2rem' }}
+                  onClick={() => handleQuickDemoPersona('organization', 'staff')}
+                >
+                  🛡️ Org Staff (Returning)
                 </button>
               </div>
+              <button
+                type="button"
+                className="srg-btn srg-btn-sm"
+                style={{ width: '100%', fontSize: '0.75rem', padding: '0.45rem', background: '#38BDF820', color: '#38BDF8', border: '1px dashed #38BDF8' }}
+                onClick={() => handleQuickDemoPersona('tourist', 'staff', true)}
+              >
+                ✨ Test First-Time Onboarding Flow (New User)
+              </button>
             </div>
           )}
         </div>

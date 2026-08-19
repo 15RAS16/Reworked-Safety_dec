@@ -35,6 +35,13 @@ window.StorageService = (function() {
       } catch (e) {}
     },
 
+    clearAlerts: function() {
+      try {
+        localStorage.removeItem(KEYS.ALERTS);
+      } catch (e) {}
+      return [];
+    },
+
     addAlert: function(alertObj) {
       const alerts = this.getAlerts();
       const newAlert = {
@@ -51,9 +58,9 @@ window.StorageService = (function() {
     getRoutes: function() {
       try {
         const data = localStorage.getItem(KEYS.ROUTES);
-        return data ? JSON.parse(data) : window.SRG_DATA.scenarios;
+        return data ? JSON.parse(data) : ((window.SRG_DATA && window.SRG_DATA.scenarios) || []);
       } catch (e) {
-        return window.SRG_DATA.scenarios || [];
+        return (window.SRG_DATA && window.SRG_DATA.scenarios) || [];
       }
     },
 
@@ -65,10 +72,17 @@ window.StorageService = (function() {
 
     getContacts: function(scenarioId) {
       try {
-        const data = localStorage.getItem(KEYS.CONTACTS + '_' + scenarioId);
-        if (data) return JSON.parse(data);
-        const scenario = (window.SRG_DATA.scenarios || []).find(s => s.id === scenarioId);
-        return scenario ? scenario.contacts : [];
+        if (scenarioId) {
+          const data = localStorage.getItem(KEYS.CONTACTS + '_' + scenarioId);
+          if (data) return JSON.parse(data);
+          const scenario = (window.SRG_DATA && window.SRG_DATA.scenarios || []).find(s => s.id === scenarioId);
+          if (scenario && scenario.contacts) return scenario.contacts;
+        }
+        const allScenarios = (window.SRG_DATA && window.SRG_DATA.scenarios) || [];
+        if (allScenarios.length > 0 && allScenarios[0].contacts) {
+          return allScenarios[0].contacts;
+        }
+        return [];
       } catch (e) {
         return [];
       }
@@ -76,8 +90,20 @@ window.StorageService = (function() {
 
     saveContacts: function(scenarioId, contacts) {
       try {
-        localStorage.setItem(KEYS.CONTACTS + '_' + scenarioId, JSON.stringify(contacts));
+        const key = scenarioId ? (KEYS.CONTACTS + '_' + scenarioId) : KEYS.CONTACTS;
+        localStorage.setItem(key, JSON.stringify(contacts));
       } catch (e) {}
+    },
+
+    addContact: function(contactObj, scenarioId) {
+      const contacts = this.getContacts(scenarioId);
+      const newContact = {
+        id: 'c-' + Date.now(),
+        ...contactObj
+      };
+      contacts.push(newContact);
+      this.saveContacts(scenarioId, contacts);
+      return contacts;
     },
 
     getCommunityReviews: function() {
@@ -158,6 +184,10 @@ window.StorageService = (function() {
         const data = localStorage.getItem(KEYS.TIMELINE);
         return data ? JSON.parse(data) : [];
       } catch (e) { return []; }
+    },
+
+    getTimeline: function() {
+      return this.getJourneyTimeline();
     },
 
     addTimelineEvent: function(event) {

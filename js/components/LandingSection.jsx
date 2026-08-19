@@ -9,6 +9,7 @@ window.LandingSection = function({
   activeRole = 'tourist',
   orgPermission = 'admin',
   onSelectOrgPermission,
+  allowedModes = ['tourist', 'parent', 'organization'],
   scenarios = [],
   activeScenario,
   onSelectScenario
@@ -69,13 +70,13 @@ window.LandingSection = function({
       {/* Hero Welcome Banner */}
       <div className="srg-landing-hero">
         <div style={{ fontSize: '0.76rem', color: '#38BDF8', fontWeight: '800', letterSpacing: '0.08em', marginBottom: '0.3rem' }}>
-          AI-POWERED CORRIDOR PROTECTION PLATFORM
+          AUTHORIZED SAFETY WORKSPACES
         </div>
         <h1 style={{ fontSize: '2.2rem', fontWeight: '900', color: '#FFFFFF', margin: '0 0 0.6rem 0' }}>
           Select Safety Workspace Mode
         </h1>
         <p style={{ fontSize: '0.95rem', color: '#94A3B8', maxWidth: '650px', margin: '0 auto' }}>
-          SafeRoute Guardian provides purpose-built workspaces for travelers, parents, and organizations with strict Role-Based Access Control.
+          Switch between your authorized workspaces. Permissions are governed strictly by your verified profile.
         </p>
       </div>
 
@@ -83,18 +84,34 @@ window.LandingSection = function({
       <div className="srg-roles-grid">
         {roles.map((r) => {
           const isSelected = activeRole === r.id;
+          const isAllowed = allowedModes && allowedModes.length > 0 ? allowedModes.includes(r.id) : true;
+
           return (
             <div
               key={r.id}
-              className={`srg-role-selection-card ${isSelected ? 'active' : ''}`}
-              style={{ borderColor: isSelected ? r.color : '#1E293B' }}
-              onClick={() => onSelectRole(r.id)}
+              className={`srg-role-selection-card ${isSelected ? 'active' : ''} ${!isAllowed ? 'disabled' : ''}`}
+              style={{
+                borderColor: isSelected ? r.color : '#1E293B',
+                opacity: isAllowed ? 1 : 0.55
+              }}
+              onClick={() => {
+                if (isAllowed) {
+                  onSelectRole(r.id);
+                }
+              }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.8rem' }}>
                 <span style={{ fontSize: '2.4rem' }}>{r.icon}</span>
-                <span style={{ fontSize: '0.72rem', padding: '0.2rem 0.6rem', borderRadius: '999px', background: `${r.color}20`, color: r.color, fontWeight: '800' }}>
-                  {r.badge}
-                </span>
+                <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+                  {!isAllowed && (
+                    <span style={{ fontSize: '0.68rem', padding: '0.2rem 0.5rem', borderRadius: '999px', background: '#334155', color: '#94A3B8', fontWeight: '700' }}>
+                      🔒 Restricted
+                    </span>
+                  )}
+                  <span style={{ fontSize: '0.72rem', padding: '0.2rem 0.6rem', borderRadius: '999px', background: `${r.color}20`, color: r.color, fontWeight: '800' }}>
+                    {r.badge}
+                  </span>
+                </div>
               </div>
 
               <h2 style={{ fontSize: '1.25rem', fontWeight: '800', color: '#FFFFFF', marginBottom: '0.5rem' }}>
@@ -105,7 +122,7 @@ window.LandingSection = function({
               </p>
 
               {/* Organization Internal Permission Selector if Selected */}
-              {r.id === 'organization' && isSelected && (
+              {r.id === 'organization' && isSelected && isAllowed && (
                 <div style={{ background: '#0F172A', border: '1px solid #334155', borderRadius: '10px', padding: '0.75rem', marginBottom: '1rem' }} onClick={(e) => e.stopPropagation()}>
                   <span style={{ fontSize: '0.72rem', color: '#94A3B8', fontWeight: '800', display: 'block', marginBottom: '0.4rem' }}>
                     ORGANIZATION PERMISSION TIER:
@@ -144,10 +161,14 @@ window.LandingSection = function({
               <button
                 type="button"
                 className="srg-btn srg-btn-primary"
-                style={{ width: '100%', background: isSelected ? r.color : '#1E293B', borderColor: isSelected ? r.color : '#334155', color: '#FFFFFF' }}
-                onClick={(e) => { e.stopPropagation(); onSelectRole(r.id); }}
+                style={{ width: '100%', background: isSelected ? r.color : (isAllowed ? '#1E293B' : '#334155'), borderColor: isSelected ? r.color : '#334155', color: '#FFFFFF', cursor: isAllowed ? 'pointer' : 'not-allowed' }}
+                disabled={!isAllowed}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (isAllowed) onSelectRole(r.id);
+                }}
               >
-                {isSelected ? 'Enter Workspace →' : 'Select Mode'}
+                {!isAllowed ? '🔒 Not Authorized' : (isSelected ? 'Enter Workspace →' : 'Switch Workspace')}
               </button>
             </div>
           );

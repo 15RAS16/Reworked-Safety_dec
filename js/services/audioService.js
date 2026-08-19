@@ -165,6 +165,10 @@ window.AudioService = (function() {
       } catch (e) {}
     },
 
+    playSafeChime: function() {
+      this.playSafeConfirmation();
+    },
+
     /**
      * Play short tick sound during countdowns or holding SOS
      */

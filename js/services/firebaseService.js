@@ -327,7 +327,11 @@ window.FirebaseService = (function() {
 
     saveUserProfile: async function(userId, profileUpdates) {
       // Whitelist updateable profile fields to prevent privilege escalation
-      const allowedFields = ['displayName', 'photoURL', 'emergencyContact', 'settings', 'onboardingComplete', 'primaryRole', 'orgPermission', 'orgName', 'organizationId', 'linkedDependentIds', 'allowedModes'];
+      const allowedFields = [
+        'displayName', 'photoURL', 'emergencyContact', 'settings',
+        'onboardingComplete', 'primaryRole', 'accessType', 'orgPermission',
+        'orgName', 'organizationId', 'organizationIds', 'linkedDependentIds', 'allowedModes'
+      ];
       const sanitized = {};
       allowedFields.forEach(k => {
         if (profileUpdates[k] !== undefined) sanitized[k] = profileUpdates[k];
@@ -391,6 +395,7 @@ window.FirebaseService = (function() {
 
       await this.saveUserProfile(parentId, {
         primaryRole: 'parent',
+        accessType: 'self',
         allowedModes: ['parent'],
         linkedDependentIds: linked,
         onboardingComplete: true
@@ -428,8 +433,10 @@ window.FirebaseService = (function() {
 
       await this.saveUserProfile(ownerUserId, {
         primaryRole: 'organization',
+        accessType: 'admin',
         orgPermission: 'admin',
         organizationId: orgId,
+        organizationIds: [orgId],
         orgName: payload.name,
         allowedModes: ['organization'],
         onboardingComplete: true
@@ -443,6 +450,7 @@ window.FirebaseService = (function() {
       const invitation = {
         token: inviteToken,
         organizationId: orgId,
+        organizationName: 'Apex Global Safety Operations',
         email: email.trim().toLowerCase(),
         role: role === 'admin' ? 'admin' : 'staff',
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days expiry
@@ -452,6 +460,13 @@ window.FirebaseService = (function() {
 
       if (isFirebaseLive && dbInstance) {
         await dbInstance.collection('invitations').doc(inviteToken).set(invitation);
+      } else {
+        try {
+          const raw = localStorage.getItem(LOCAL_KEYS.INVITATIONS);
+          const invs = raw ? JSON.parse(raw) : {};
+          invs[inviteToken] = invitation;
+          localStorage.setItem(LOCAL_KEYS.INVITATIONS, JSON.stringify(invs));
+        } catch (e) {}
       }
       return invitation;
     },
@@ -462,12 +477,7 @@ window.FirebaseService = (function() {
       }
       const token = inviteToken.trim().toUpperCase();
 
-      let targetOrg = {
-        id: 'org-' + Date.now(),
-        name: 'Apex Global Safety Operations',
-        type: 'Educational Institution',
-        role: token.includes('ADMIN') ? 'admin' : 'staff'
-      };
+      let targetOrg = null;
 
       if (isFirebaseLive && dbInstance) {
         const invDoc = await dbInstance.collection('invitations').doc(token).get();
@@ -496,19 +506,48 @@ window.FirebaseService = (function() {
         });
 
         const orgDoc = await dbInstance.collection('organizations').doc(invData.organizationId).get();
-        const orgInfo = orgDoc.data();
+        const orgInfo = orgDoc.data() || {};
         targetOrg = {
           id: invData.organizationId,
-          name: orgInfo.name,
-          type: orgInfo.type,
-          role: invData.role
+          name: orgInfo.name || 'Safety Organization',
+          type: orgInfo.type || 'Educational Institution',
+          role: invData.role || 'staff'
         };
+      } else {
+        // Local demo verification
+        let localInvs = {};
+        try {
+          const raw = localStorage.getItem(LOCAL_KEYS.INVITATIONS);
+          if (raw) localInvs = JSON.parse(raw);
+        } catch (e) {}
+
+        const matchedInv = localInvs[token];
+        if (matchedInv) {
+          targetOrg = {
+            id: matchedInv.organizationId || 'demo-org-1',
+            name: matchedInv.organizationName || 'Apex Global Safety Operations',
+            type: 'Educational Institution',
+            role: matchedInv.role === 'admin' ? 'admin' : 'staff'
+          };
+        } else if (token.startsWith('ORG-INV-') || token.startsWith('DEMO-')) {
+          // Standard valid demo invite format
+          targetOrg = {
+            id: 'demo-org-1',
+            name: 'Apex Global Safety Operations',
+            type: 'Educational Institution',
+            role: 'staff'
+          };
+        } else {
+          throw new Error('Invalid invitation token. Please request an active invitation from your Organization Administrator.');
+        }
       }
 
       await this.saveUserProfile(userId, {
         primaryRole: 'organization',
+        accessType: targetOrg.role === 'admin' ? 'admin' : 'staff',
         orgPermission: targetOrg.role,
         organizationId: targetOrg.id,
+        organizationIds: [targetOrg.id],
         orgName: targetOrg.name,
         allowedModes: ['organization'],
         onboardingComplete: true

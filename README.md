@@ -120,6 +120,52 @@ $$\text{dist}(P, AB) = \min_{t \in [0, 1]} \| P - (A + t(B - A)) \|$$
 
 ---
 
+## 🚀 Deployment Guide (Vercel)
+
+SafeRoute Guardian is fully optimized for **Vercel** with zero configuration required, deterministic bootstrapping, and security headers.
+
+### Deploy via Vercel Git Integration:
+1. Push your repository to GitHub / GitLab / Bitbucket.
+2. In the Vercel Dashboard, click **Add New Project** and import the repository.
+3. **Framework Preset**: `Vite` (or `Other` / Static).
+4. **Build Command**: `npm run build` (or leave default if deploying directly).
+5. **Output Directory**: `dist` (or `.` for static hosting).
+6. Click **Deploy**.
+
+### Manual CLI Deployment:
+```bash
+npm install -g vercel
+vercel
+```
+
+### Deterministic Startup & Blank-Screen Resilience:
+The platform uses `js/bootstrap.js` as an application startup coordinator. It validates all global singletons (`window.React`, `window.ReactDOM`, `window.App`, `window.SRG_DATA`, `window.StorageService`, `window.RiskEngine`, `window.FirebaseService`, etc.) before mounting React. If an unexpected dependency failure or network delay occurs, it renders a branded diagnostic recovery screen with a 1-click reload instead of a blank screen.
+
+---
+
+## 🛡️ Authentication & Guided Onboarding Workflow
+
+### Returning User Fast-Path
+When an authenticated user returns to SafeRoute Guardian:
+- Their Firestore profile is verified.
+- If `onboardingComplete === true`, the user is **immediately and automatically redirected** to their authorized dashboard (`tourist` -> Tourist Dashboard, `parent` -> Parent Dashboard, `organization:admin` -> Admin Command Center, `organization:staff` -> Staff Dashboard).
+- No onboarding screens or manual role selection dialogs are shown to returning users.
+
+### First-Time User 4-Step Onboarding
+1. **Account Login**: Sign in via Google OAuth or Email/Password.
+2. **Select Mode**: Exactly 3 large mode cards:
+   - 🧳 **Tourist**: Personal travel safety, AI route scores, SOS panic, and local help.
+   - 👨‍👩‍👧 **Parent / Guardian**: Monitor and protect children, elderly family members, or dependents.
+   - 🏢 **Organization**: Manage travel safety for schools, enterprises, tour groups, or institutions.
+3. **Choose Access Type**:
+   - **Tourist**: Self Use (👤).
+   - **Parent**: Self Use / Guardian (👨‍👩‍👧).
+   - **Organization**: Organization Administrator (👑) or Organization User / Staff (🛡️).
+4. **Profile & Verification**:
+   - Setup emergency contacts, link dependents, create organizations, or verify official invitation tokens.
+
+---
+
 ## 🧪 Automated Testing
 
 SafeRoute Guardian includes an automated test suite verifying both geospatial calculations and security rules:
@@ -136,7 +182,7 @@ python tests/run_all_tests.py
 
 ---
 
-## 🚀 How to Run Locally
+## 💻 How to Run Locally
 
 ```powershell
 python -m http.server 8080
@@ -156,3 +202,4 @@ SafeRoute Guardian was architected, production-hardened, and designed using **Go
 - Crafting the role-tailored UI/UX design system and circular SVG RiskGauge.
 - Developing serverless Cloud Functions for emergency dispatch and cryptographic invitations.
 - Building the automated test runner and verification suite.
+

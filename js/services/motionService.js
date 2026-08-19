@@ -80,6 +80,10 @@ window.MotionService = (function() {
       this.notifyStatus();
     },
 
+    initShakeDetector: function(onEmergency) {
+      this.init({ onEmergency: onEmergency });
+    },
+
     requestPermission: function() {
       if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
         DeviceMotionEvent.requestPermission()

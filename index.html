@@ -81,13 +81,7 @@
   <script type="text/babel" src="js/components/ToastContainer.jsx"></script>
   <script type="text/babel" src="js/app.jsx"></script>
 
-  <!-- Mount React Application -->
-  <script type="text/babel">
-    const rootElement = document.getElementById('root');
-    if (rootElement && window.App) {
-      const root = ReactDOM.createRoot(rootElement);
-      root.render(<window.App />);
-    }
-  </script>
+  <!-- Bootstrap Application Startup Coordinator -->
+  <script src="js/bootstrap.js"></script>
 </body>
 </html>

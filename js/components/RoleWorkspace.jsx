@@ -10,7 +10,12 @@ window.RoleWorkspace = function({
   activeScenario,
   riskData
 }) {
-  const role = window.MockData.roles[currentRole] || window.MockData.roles.tourist;
+  const rolesObj = (window.SRG_DATA && window.SRG_DATA.roles) || (window.MockData && window.MockData.roles) || {};
+  const role = rolesObj[currentRole] || (Array.isArray(rolesObj) ? rolesObj.find(r => r.id === currentRole) : null) || {
+    title: currentRole.charAt(0).toUpperCase() + currentRole.slice(1),
+    icon: '🛡️',
+    color: '#38BDF8'
+  };
 
   let features = [];
   if (currentRole === 'tourist') {

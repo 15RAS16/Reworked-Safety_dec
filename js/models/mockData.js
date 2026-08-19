@@ -298,5 +298,105 @@ window.SRG_DATA = {
       phone: '+1 (555) 876-1122',
       isAvailable: true
     }
+  ],
+
+  // Tourist Safety Intelligence Destinations
+  touristDestinations: [
+    {
+      id: 'dest-gion',
+      name: 'Kyoto Historic Gion Corridor',
+      country: 'Japan',
+      description: 'Ancient heritage district featuring continuous ambient lantern lighting, frequent pedestrian foot traffic, active tourist police substations, and comprehensive CCTV safety corridors.',
+      safetyScore: 96,
+      weather: {
+        condition: 'Clear Sky',
+        temp: '22°C (72°F)',
+        advisory: 'Optimal visibility conditions throughout the designated walking corridor with gentle evening breeze.'
+      },
+      deadZones: [
+        {
+          name: 'Canal Alley Segment',
+          notes: 'Brief 30m cellular dead-spot under stone bridge. Automatic safe beacon pre-caches route coordinates.'
+        }
+      ]
+    }
+  ],
+
+  // 24/7 Verified Trusted Safe Spots
+  trustedSafeSpots: [
+    {
+      id: 'spot-1',
+      name: 'Downtown Police Substation & Kiosk',
+      category: 'Police',
+      status: '24/7 Monitored',
+      support: 'Emergency CAD Liaison, safe waiting lobby, multilingual staff',
+      distance: '180 m',
+      icon: '👮'
+    },
+    {
+      id: 'spot-2',
+      name: 'Metro Health Emergency Clinic',
+      category: 'Medical',
+      status: 'Open 24/7',
+      support: 'Trauma care, emergency first aid, free water & phone access',
+      distance: '320 m',
+      icon: '🏥'
+    },
+    {
+      id: 'spot-3',
+      name: 'Heritage Visitor Information Kiosk',
+      category: 'Tourist Help',
+      status: 'Open until 22:00',
+      support: 'Multilingual city maps, high-speed charging, staff assistance',
+      distance: '450 m',
+      icon: 'ℹ️'
+    },
+    {
+      id: 'spot-4',
+      name: 'Bayfront Transport Transit Center',
+      category: 'Transport',
+      status: '24/7 Monitored',
+      support: 'Lit transit hub, security patrol escort, emergency callboxes',
+      distance: '600 m',
+      icon: '🚆'
+    },
+    {
+      id: 'spot-5',
+      name: 'Community Safe Haven Cafe',
+      category: 'Shelter',
+      status: 'Open 24/7',
+      support: 'Emergency shelter, verified staff, free clean water and WiFi',
+      distance: '250 m',
+      icon: '☕'
+    },
+    {
+      id: 'spot-6',
+      name: 'Civic Center Mobile Charging Pod',
+      category: 'Charging',
+      status: 'Active 24/7',
+      support: 'High-speed device charging, safe lighting, SOS call point',
+      distance: '380 m',
+      icon: '🔋'
+    },
+    {
+      id: 'spot-7',
+      name: 'Central Food & Hydration Hub',
+      category: 'Food & Water',
+      status: 'Open 24/7',
+      support: 'Clean drinking water refill, packaged rations, first aid kits',
+      distance: '210 m',
+      icon: '💧'
+    }
   ]
 };
+
+// Add dictionary access to roles array for backwards compatibility
+if (Array.isArray(window.SRG_DATA.roles)) {
+  window.SRG_DATA.roles.forEach(function(r) {
+    window.SRG_DATA.roles[r.id] = r;
+  });
+}
+
+// Global Alias Harmonization
+window.MockData = window.SRG_DATA;
+

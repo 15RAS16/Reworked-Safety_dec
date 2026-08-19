@@ -15,7 +15,24 @@ window.TouristExploreView = function({
   selectedRouteType = 'safer'
 }) {
   const [activeRoute, setActiveRoute] = React.useState(selectedRouteType); // 'safer' | 'fastest'
-  const destination = window.MockData.touristDestinations[0]; // Kyoto Gion / Default
+  const destination = ((window.SRG_DATA && window.SRG_DATA.touristDestinations) || (window.MockData && window.MockData.touristDestinations) || [])[0] || {
+    id: 'dest-default',
+    name: 'Kyoto Historic Gion Corridor',
+    country: 'Japan',
+    description: 'Ancient heritage district featuring continuous ambient lantern lighting, frequent pedestrian foot traffic, active tourist police substations, and comprehensive CCTV safety corridors.',
+    safetyScore: 96,
+    weather: {
+      condition: 'Clear Sky',
+      temp: '22°C (72°F)',
+      advisory: 'Optimal visibility conditions throughout the designated walking corridor with gentle evening breeze.'
+    },
+    deadZones: [
+      {
+        name: 'Canal Alley Segment',
+        notes: 'Brief 30m cellular dead-spot under stone bridge. Automatic safe beacon pre-caches route coordinates.'
+      }
+    ]
+  };
 
   return (
     <div className="srg-tourist-view">

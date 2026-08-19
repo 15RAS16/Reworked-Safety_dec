@@ -7,11 +7,13 @@
 window.RoleNavigation = function({
   currentRole = 'tourist',
   orgPermission = 'staff',
+  allowedModes = ['tourist'],
   activeTool = 'workspace',
   onSelectTool,
   onOpenRoles
 }) {
-  const roleData = window.MockData.roles[currentRole] || window.MockData.roles.tourist;
+  const rolesObj = (window.SRG_DATA && window.SRG_DATA.roles) || (window.MockData && window.MockData.roles) || {};
+  const roleData = rolesObj[currentRole] || (Array.isArray(rolesObj) ? rolesObj.find(r => r.id === currentRole) : null) || {};
   
   // Filter tools based on role and organization permission
   let availableTools = [];

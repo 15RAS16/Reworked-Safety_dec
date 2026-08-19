@@ -3,13 +3,31 @@
  */
 
 window.DeviationModal = function({
+  isOpen = false,
   activeScenario,
   riskData,
-  countdownSeconds,
-  isFastForwarding,
+  countdownSeconds = 0,
+  isFastForwarding = false,
   onAcknowledgeSafe,
-  onFastForwardDemo
+  onFastForwardDemo,
+  onResolveSafe,
+  onTriggerEmergency,
+  travelerName,
+  distanceOffRouteMeters
 }) {
+  // This modal remains mounted by the application, so it must never read
+  // scenario data until it is actually open. Older callers use activeScenario;
+  // the current app passes simple, already-sanitized display props instead.
+  if (!isOpen) return null;
+
+  const resolvedTravelerName = travelerName || (activeScenario && activeScenario.travelerName) || 'Traveler';
+  const resolvedDistance = Number.isFinite(distanceOffRouteMeters)
+    ? distanceOffRouteMeters
+    : ((riskData && riskData.distanceOffCorridor) || 0);
+  const resolvedRiskSummary = (riskData && riskData.summary) || 'A route deviation needs a safety check-in.';
+  const handleAcknowledgeSafe = onResolveSafe || onAcknowledgeSafe || function() {};
+  const handleEscalation = onTriggerEmergency || onFastForwardDemo || function() {};
+
   // Format seconds to mm:ss
   const formatTime = (secs) => {
     const m = Math.floor(secs / 60);
@@ -40,7 +58,7 @@ window.DeviationModal = function({
         </h3>
 
         <p style={{ color: '#CBD5E1', fontSize: '0.9rem', marginBottom: '1.25rem', lineHeight: '1.5' }}>
-          <b>{activeScenario.travelerName}</b> is currently <b>{riskData.distanceOffCorridor}m</b> outside the approved safe corridor.
+          <b>{resolvedTravelerName}</b> is currently <b>{resolvedDistance}m</b> outside the approved safe corridor.
         </p>
 
         {/* Explainable AI snippet */}
@@ -54,7 +72,7 @@ window.DeviationModal = function({
           color: '#E2E8F0',
           marginBottom: '1.5rem'
         }}>
-          <b>AI Risk Engine Note:</b> {riskData.summary}
+          <b>AI Risk Engine Note:</b> {resolvedRiskSummary}
         </div>
 
         {/* Countdown Timer Display */}
@@ -81,7 +99,7 @@ window.DeviationModal = function({
           <button 
             className="srg-btn srg-btn-teal"
             style={{ width: '100%', padding: '0.9rem', fontSize: '1rem' }}
-            onClick={onAcknowledgeSafe}
+            onClick={handleAcknowledgeSafe}
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
             I'm Safe — Return to Safe Route
@@ -89,11 +107,11 @@ window.DeviationModal = function({
 
           <button 
             className="srg-btn srg-btn-outline"
-            style={{ borderColor: '#F59E0B', color: '#FCD34D' }}
-            onClick={onFastForwardDemo}
+            style={{ borderColor: '#EF4444', color: '#FCA5A5' }}
+            onClick={handleEscalation}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="13 19 22 12 13 5 13 19"/><polygon points="2 19 11 12 2 5 2 19"/></svg>
-            {isFastForwarding ? 'Fast-Forwarding (20s Demo)...' : 'Fast-Forward Demo (20s Escalation)'}
+            {isFastForwarding ? 'Escalation in progress...' : 'Trigger Emergency SOS'}
           </button>
         </div>
       </div>

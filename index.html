@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>SafeRoute Guardian — AI Corridor & Geofence Safety Platform</title>
+  <meta name="description" content="AI-powered safe route corridors, real-time geofence tracking, explainable safety risk scoring, tourist safety intelligence, and emergency escalation for travelers, schools, and organizations." />
+
+  <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+
+  <!-- Application Stylesheet -->
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/light-theme.css" />
+  <link rel="stylesheet" href="css/portal.css" />
+</head>
+<body>
+  <!-- React Mount Point -->
+  <div id="root">
+    <!-- Fallback / Loading State -->
+    <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; color:#94A3B8; font-family:sans-serif; text-align:center;">
+      <div style="font-size:2.5rem; margin-bottom:1rem;">🛡️</div>
+      <h2 style="color:#FFFFFF; margin-bottom:0.5rem;">SafeRoute Guardian</h2>
+      <p style="font-size:0.9rem;">Initializing AI Safety Engine & Live Corridor Map...</p>
+    </div>
+  </div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+  <!-- React 18 & ReactDOM 18 -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
+  <!-- Babel Standalone for In-Browser JSX Compilation -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!-- Models, Services & AI Risk Engine -->
+  <script src="js/models/mockData.js"></script>
+  <script src="js/engine/riskEngine.js"></script>
+  <script src="js/services/audioService.js"></script>
+  <script src="js/services/motionService.js"></script>
+  <script src="js/services/storageService.js"></script>
+
+  <!-- React Components (Compiled via Babel) -->
+  <script type="text/babel" src="js/components/InteractiveMap.jsx"></script>
+  <script type="text/babel" src="js/components/Header.jsx"></script>
+  <script type="text/babel" src="js/components/LandingSection.jsx"></script>
+  <script type="text/babel" src="js/components/LoginPortal.jsx"></script>
+  <script type="text/babel" src="js/components/RoleNavigation.jsx"></script>
+  <script type="text/babel" src="js/components/RoleWorkspace.jsx"></script>
+  <script type="text/babel" src="js/components/FullScreenMap.jsx"></script>
+  <script type="text/babel" src="js/components/RoleFeaturePage.jsx"></script>
+  <script type="text/babel" src="js/components/TouristExploreView.jsx"></script>
+  <script type="text/babel" src="js/components/LocalHelpNetwork.jsx"></script>
+  <script type="text/babel" src="js/components/TrustedSafeSpots.jsx"></script>
+  <script type="text/babel" src="js/components/JourneyTimeline.jsx"></script>
+  <script type="text/babel" src="js/components/CommunityReviewsView.jsx"></script>
+  <script type="text/babel" src="js/components/AdminDashboard.jsx"></script>
+  <script type="text/babel" src="js/components/UserDashboard.jsx"></script>
+  <script type="text/babel" src="js/components/EmergencyOverlay.jsx"></script>
+  <script type="text/babel" src="js/components/DeviationModal.jsx"></script>
+  <script type="text/babel" src="js/components/ToastContainer.jsx"></script>
+  <script type="text/babel" src="js/app.jsx"></script>
+
+  <!-- Mount React Application -->
+  <script type="text/babel">
+    const rootElement = document.getElementById('root');
+    if (rootElement && window.App) {
+      const root = ReactDOM.createRoot(rootElement);
+      root.render(<window.App />);
+    }
+  </script>
+</body>
+</html>

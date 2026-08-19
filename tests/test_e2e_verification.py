@@ -36,12 +36,15 @@ def test_index_html():
     assert 'href="./css/light-theme.css"' in content
     assert 'href="./css/portal.css"' in content
     assert 'src="./js/services/configService.js"' in content
+    assert 'src="./js/services/googleMapsService.js"' in content
     assert 'src="./js/services/firebaseService.js"' in content
     assert 'src="./js/models/mockData.js"' in content
     assert 'src="./js/engine/riskEngine.js"' in content
     assert 'src="./js/services/audioService.js"' in content
     assert 'src="./js/services/motionService.js"' in content
     assert 'src="./js/services/storageService.js"' in content
+    assert 'src="./js/components/GoogleCampusMap.jsx"' in content
+    assert 'src="./js/components/InteractiveMap.jsx"' in content
     assert 'src="./js/components/LoginPortal.jsx"' in content
     assert 'src="./js/components/OnboardingModal.jsx"' in content
     assert 'src="./js/app.jsx"' in content
@@ -157,13 +160,18 @@ def test_static_asset_contents():
         "js/bootstrap.js",
         "js/app.jsx",
         "js/models/mockData.js",
+        "js/services/configService.js",
+        "js/services/googleMapsService.js",
         "js/services/storageService.js",
         "js/engine/riskEngine.js",
+        "js/components/GoogleCampusMap.jsx",
+        "js/components/InteractiveMap.jsx",
         "js/components/LoginPortal.jsx",
         "css/style.css",
         "css/light-theme.css",
         "css/portal.css"
     ]
+
     for rel in test_files:
         path = test_file_exists(rel)
         with open(path, "r", encoding="utf-8") as f:

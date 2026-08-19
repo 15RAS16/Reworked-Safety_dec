@@ -78,6 +78,38 @@ Even though public Firebase API keys cannot bypass Firestore Security Rules, app
 
 ---
 
+## 🗺️ 2.1 Restrict Google Maps JavaScript API Keys
+
+To securely use Google Maps JavaScript API on SafeRoute Guardian without exposing your quota or billing:
+
+1. **Environment Variable Configuration**:
+   - Provide the key via `VITE_GOOGLE_MAPS_API_KEY` (or `GOOGLE_MAPS_API_KEY`).
+   - For Vercel: Set in **Project Settings → Environment Variables**.
+   - For Local: Set in `.env.local`.
+   - **NEVER** hardcode or commit this key to GitHub repositories.
+
+2. **Google Cloud Console Restrictions**:
+   - Navigate to [Google Cloud Console Credentials](https://console.cloud.google.com/apis/credentials).
+   - Create or select your Google Maps API Key.
+   - **Application restrictions**:
+     - Select **HTTP referrers (web sites)**.
+     - Add authorized referrers:
+       - `http://localhost:*/*`
+       - `http://127.0.0.1:*/*`
+       - `https://your-project.vercel.app/*`
+       - `https://*.vercel.app/*` (for preview deployments)
+   - **API restrictions**:
+     - Select **Restrict key**.
+     - Enable only:
+       - **Maps JavaScript API**
+       - **Places API** (if enabled)
+   - Do not leave the key unrestricted.
+
+3. **Fallback & Graceful Degradation**:
+   - If the key is missing, invalid, or referrer-blocked, the platform gracefully activates an in-page safety card or OpenStreetMap fallback without crashing the dashboard.
+
+---
+
 ## 🛡️ 3. Enable Firebase App Check
 
 Firebase App Check protects your backend resources (Firestore and Cloud Functions) from abuse, scraping, and billing spikes by ensuring requests originate only from your authentic web app:

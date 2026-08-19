@@ -12,7 +12,7 @@ window.SRG_DATA = {
     shortName: 'MMU Mullana',
     location: 'Mullana, Ambala Cantonment, Haryana 133207, India',
     centerCoords: [30.2505, 77.0495],
-    geofenceLabel: 'MMU Mullana Campus Safety Geofence — Demo Data',
+    geofenceLabel: 'MMU Mullana Campus Safety Geofence — Demo / Simulated Data',
     boundaryPolygon: [
       [30.2458, 77.0445],
       [30.2458, 77.0550],

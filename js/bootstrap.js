@@ -16,6 +16,7 @@
     { name: 'RiskEngine', check: function() { return !!window.RiskEngine && typeof window.RiskEngine.assessRisk === 'function'; } },
     { name: 'FirebaseService', check: function() { return !!window.FirebaseService; } },
     { name: 'ConfigService', check: function() { return !!window.ConfigService; } },
+    { name: 'GoogleMapsService', check: function() { return !!window.GoogleMapsService; } },
     { name: 'AudioService', check: function() { return !!window.AudioService; } },
     { name: 'MotionService', check: function() { return !!window.MotionService; } }
   ];

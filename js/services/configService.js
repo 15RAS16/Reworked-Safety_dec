@@ -36,6 +36,11 @@ window.ConfigService = (function() {
   const appId = env.VITE_FIREBASE_APP_ID || env.appId || '';
   const measurementId = env.VITE_FIREBASE_MEASUREMENT_ID || env.measurementId || '';
 
+  // Google Maps JavaScript API Key (read from VITE_GOOGLE_MAPS_API_KEY or GOOGLE_MAPS_API_KEY)
+  const rawGoogleMapsKey = env.VITE_GOOGLE_MAPS_API_KEY || env.GOOGLE_MAPS_API_KEY ||
+    (typeof window !== 'undefined' && (window.VITE_GOOGLE_MAPS_API_KEY || window.GOOGLE_MAPS_API_KEY)) || '';
+  const googleMapsApiKey = isPlaceholder(rawGoogleMapsKey) ? '' : rawGoogleMapsKey.trim();
+
   // Demo mode is explicitly controlled by build-time variable VITE_ENABLE_DEMO_MODE or default true for development evaluation
   const enableDemoMode = env.VITE_ENABLE_DEMO_MODE === 'true' || env.enableDemoMode === true || env.VITE_ENABLE_DEMO_MODE === undefined;
 
@@ -63,6 +68,14 @@ window.ConfigService = (function() {
       return firebaseConfig;
     },
 
+    getGoogleMapsApiKey: function() {
+      return googleMapsApiKey;
+    },
+
+    hasGoogleMapsKey: function() {
+      return !!(googleMapsApiKey && googleMapsApiKey.length > 5);
+    },
+
     isDemoModeEnabled: function() {
       return !!enableDemoMode;
     },
@@ -82,3 +95,4 @@ window.ConfigService = (function() {
     }
   };
 })();
+

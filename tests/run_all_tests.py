@@ -15,8 +15,11 @@ def main():
 
     test_files = [
         "tests/riskEngine.test.py",
-        "tests/securityRules.test.py"
+        "tests/securityRules.test.py",
+        "tests/googleMaps.test.py",
+        "tests/test_e2e_verification.py"
     ]
+
 
     all_passed = True
     for tf in test_files:

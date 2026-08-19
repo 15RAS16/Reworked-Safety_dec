@@ -15,6 +15,7 @@ When importing or configuring your project in the [Vercel Dashboard](https://ver
 | **Build Command** | *Empty / Disabled* | No build step should run (`npm run build` must NOT execute). |
 | **Output Directory** | *Empty / Disabled* | The root static directory is served directly (do NOT use `dist`). |
 | **Install Command** | *Empty / Disabled* | No npm dependency installation needed for static delivery. |
+| **Environment Variables** | `VITE_GOOGLE_MAPS_API_KEY` (Optional) | Restricted Google Maps JavaScript API key for live MMU Mullana campus map rendering. |
 
 ---
 
@@ -24,6 +25,7 @@ When importing or configuring your project in the [Vercel Dashboard](https://ver
 2. **No `dist` Folder**: The site is deployed directly from the repository root containing `index.html`.
 3. **No Catch-All Rewrites**: The [vercel.json](file:///vercel.json) file contains security & caching headers only, with no `rewrites` block, ensuring all `/js/...` and `/css/...` files return their genuine code content.
 4. **Deterministic Bootstrapping**: [js/bootstrap.js](file:///js/bootstrap.js) is loaded as the final script and orchestrates application mounting only after all global dependencies are confirmed ready.
+5. **Restricted Google Maps Key**: The Google Maps API key must be restricted to HTTP referrers (`localhost` + Vercel domain) and Maps JavaScript API only in Google Cloud Console.
 
 ---
 
@@ -31,11 +33,12 @@ When importing or configuring your project in the [Vercel Dashboard](https://ver
 
 1. **Open Live URL**: Navigate to your deployed Vercel domain (e.g., `https://your-project.vercel.app`).
 2. **Hard Refresh**: Press <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>R</kbd> (or <kbd>Cmd</kbd> + <kbd>Shift</kbd> + <kbd>R</kbd> on Mac) to bypass local browser cache.
-3. **Check Loading State**: Verify that the initial loading screen ("Initializing Role-Based Safety Engine...") disappears within 1-2 seconds and the **SafeRoute Guardian Login Portal** renders cleanly.
+3. **Check Loading State**: Verify that the initial loading screen ("Initializing Role-Based Safety Engine...") disappears within 1-2 seconds and the **SafeRoute Guardian Login Portal** renders cleanly. Note that the login page does not load maps until a post-login dashboard is opened.
 4. **Inspect DevTools Console (<kbd>F12</kbd>)**:
    - Confirm `[SafeRoute Guardian] Application successfully mounted.` is logged.
    - Confirm there are **no** `SyntaxError: Unexpected token '<'` errors.
-   - Confirm that network requests for `/js/bootstrap.js`, `/js/app.jsx`, `/js/models/mockData.js`, and `/css/style.css` return HTTP 200 with their respective JavaScript and CSS MIME types.
-5. **Verify Multi-Role Access**:
+   - Confirm that network requests for `/js/bootstrap.js`, `/js/services/googleMapsService.js`, `/js/components/GoogleCampusMap.jsx`, `/js/components/InteractiveMap.jsx`, and `/css/style.css` return HTTP 200 with their respective JavaScript and CSS MIME types.
+5. **Verify Multi-Role Access & MMU Campus Map**:
    - Test Tourist, Parent, Organization Staff, and Organization Admin personas.
-   - Verify interactive Leaflet map, circular RiskGauge, and emergency simulation controls.
+   - Verify MMU Mullana campus geofence polygon, POI safe stations, safe corridor polyline, circular RiskGauge, and emergency simulation controls.
+

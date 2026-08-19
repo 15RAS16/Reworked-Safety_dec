@@ -120,6 +120,55 @@ $$\text{dist}(P, AB) = \min_{t \in [0, 1]} \| P - (A + t(B - A)) \|$$
 
 ---
 
+## 🗺️ Google Maps JavaScript API & Campus Safety Geofencing
+
+SafeRoute Guardian integrates the **Google Maps JavaScript API** as its primary live map engine with geometry-based geofence calculation, centered on **Maharishi Markandeshwar (Deemed to be University), Mullana, Ambala Cantonment, Haryana, India**.
+
+### Map Features:
+- **Campus Centered**: Centered on MMU Mullana (`30.2505, 77.0495`) in normal roadmap view (`ROADMAP`) with zoom, fullscreen, and map-type controls enabled.
+- **Campus Safety Geofence**: Realistic campus perimeter polygon drawn via `google.maps.Polygon` with real-time `google.maps.geometry.poly.containsLocation` evaluation.
+- **Campus POI Safe Stations**:
+  - 🏛️ Main Gate (Gate 1 Security Post)
+  - 🎓 Academic Block 3 (Engineering Complex)
+  - 📚 Central Library & Student Help Kiosk
+  - 🏢 Hostels Complex (Girls & Boys Zones)
+  - 🏥 MM Super Speciality Hospital & 24/7 Trauma Emergency
+  - ⚽ MMU Sports Complex & Arena
+  - 🚌 MMU Bus Stop & Transit Terminus
+- **Safe Walking Corridors**: Approved route path rendered via `google.maps.Polyline` wrapped in a translucent geofence buffer polygon.
+- **Dynamic Traveler Status Pins**:
+  - 🟢 **Green**: Safe / On Approved Route
+  - 🟡 **Amber**: Minor Deviation / Caution
+  - 🔴 **Red**: High-Risk Deviation / Active SOS Panic
+  - 🔵 **Blue**: Guardian / Organization Monitoring Point
+- **Resilient Fallback Handling**:
+  - Displays *"Loading MMU Mullana Campus Safety Map…"* during SDK initialization.
+  - If the API key is missing, invalid, domain-restricted, or offline, renders an in-page safety card: *"Map is temporarily unavailable. Safety controls and demo mode remain available."* or falls back to OpenStreetMap without crashing dashboards.
+  - Zero dual-map container collisions; all instances, markers, and listeners are cleanly unmounted.
+
+### 🔑 Google Maps API Key Security & Restriction Rules:
+> [!IMPORTANT]
+> **Strict API Key Security Checklist**:
+> 1. **Never Hardcode Keys**: Never embed Google Maps API keys in source code or commit them to Git repositories.
+> 2. **Environment Variable Configuration**: Set the key in your `.env.local` for local development or in **Vercel Project Settings → Environment Variables**:
+>    - Variable Name: `VITE_GOOGLE_MAPS_API_KEY` (or `GOOGLE_MAPS_API_KEY`)
+> 3. **Google Cloud Console Restrictions (Mandatory)**:
+>    - Go to **Google Cloud Console → APIs & Services → Credentials**.
+>    - Select your Maps API key and configure **Application restrictions**:
+>      - Choose **HTTP referrers (web sites)**.
+>      - Add development authorized URLs:
+>        - `http://localhost:*/*`
+>        - `http://127.0.0.1:*/*`
+>      - Add your exact Vercel production deployment domain:
+>        - `https://your-project.vercel.app/*`
+>        - `https://*.vercel.app/*` (if using preview branches)
+>    - Configure **API restrictions**:
+>      - Choose **Restrict key**.
+>      - Select **Maps JavaScript API** (and Places API if utilized).
+> 4. **Do Not Use Unrestricted Keys**: Unrestricted keys will be flagged and could be subject to unauthorized quota consumption.
+
+---
+
 ## 🚀 Deployment Guide (Vercel — Static Site Deployment)
 
 SafeRoute Guardian is fully configured for zero-friction static deployment on **Vercel**.

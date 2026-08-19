@@ -120,26 +120,33 @@ $$\text{dist}(P, AB) = \min_{t \in [0, 1]} \| P - (A + t(B - A)) \|$$
 
 ---
 
-## 🚀 Deployment Guide (Vercel)
+## 🚀 Deployment Guide (Vercel — Static Site Deployment)
 
-SafeRoute Guardian is fully optimized for **Vercel** with zero configuration required, deterministic bootstrapping, and security headers.
+SafeRoute Guardian is fully configured for zero-friction static deployment on **Vercel**.
 
-### Deploy via Vercel Git Integration:
+### Vercel Project Settings (Recommended Option A — Static Deployment):
 1. Push your repository to GitHub / GitLab / Bitbucket.
-2. In the Vercel Dashboard, click **Add New Project** and import the repository.
-3. **Framework Preset**: `Vite` (or `Other` / Static).
-4. **Build Command**: `npm run build` (or leave default if deploying directly).
-5. **Output Directory**: `dist` (or `.` for static hosting).
-6. Click **Deploy**.
+2. In your [Vercel Dashboard](https://vercel.com/dashboard), click **Add New...** → **Project** and import your repository.
+3. Configure the Project Settings:
+   - **Root Directory**: Select `Reworked-Safety_dec` (or `./` if your repo root contains `index.html`).
+   - **Framework Preset**: Select **Other** (do NOT select Vite for static deployment).
+   - **Build Command**: Leave **empty / disabled** (no build step needed; Vercel serves static files directly).
+   - **Output Directory**: Leave **empty / disabled** (root directory is served).
+   - **Install Command**: Leave **empty / disabled**.
+4. Click **Deploy**.
 
-### Manual CLI Deployment:
-```bash
-npm install -g vercel
-vercel
-```
+### Safe `vercel.json` Static Header Configuration:
+The project includes a streamlined [vercel.json](file:///vercel.json) that sets security headers (`X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy`), 3600-second caching for `/js` and `/css` assets, and **no catch-all rewrite rules** to ensure all script and style requests return their actual file content rather than `index.html`.
 
-### Deterministic Startup & Blank-Screen Resilience:
-The platform uses `js/bootstrap.js` as an application startup coordinator. It validates all global singletons (`window.React`, `window.ReactDOM`, `window.App`, `window.SRG_DATA`, `window.StorageService`, `window.RiskEngine`, `window.FirebaseService`, etc.) before mounting React. If an unexpected dependency failure or network delay occurs, it renders a branded diagnostic recovery screen with a 1-click reload instead of a blank screen.
+### Post-Deployment Troubleshooting & Verification:
+- **Hard Refresh**: After deploying or redeploying, perform a hard refresh using <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>R</kbd> (or <kbd>Cmd</kbd> + <kbd>Shift</kbd> + <kbd>R</kbd> on macOS) to clear cached HTML/scripts.
+- **Inspecting Browser Console**: Open DevTools by pressing <kbd>F12</kbd> (or right-click → **Inspect** → **Console** tab).
+  - Verify that scripts load cleanly with `200 OK` status and `Content-Type: application/javascript`.
+  - Confirm there are no `SyntaxError: Unexpected token '<'` errors (which only happen when a rewrite rule returns HTML for script files).
+  - Verify `[SafeRoute Guardian] Application successfully mounted.` is logged.
+
+### Deterministic Startup Coordinator (`bootstrap.js`):
+The platform uses [js/bootstrap.js](file:///js/bootstrap.js) as an application startup coordinator. It validates all global singletons (`window.React`, `window.ReactDOM`, `window.App`, `window.SRG_DATA`, `window.StorageService`, `window.RiskEngine`, `window.FirebaseService`, `window.ConfigService`, `window.AudioService`, `window.MotionService`) before mounting React. If an unexpected network delay or dependency error occurs, it renders a branded diagnostic recovery screen with diagnostic details and a 1-click reload button instead of leaving the loading screen permanently.
 
 ---
 

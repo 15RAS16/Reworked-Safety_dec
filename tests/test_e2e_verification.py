@@ -124,33 +124,35 @@ def test_app_jsx():
     print("[PASS] app.jsx returning user redirection and Error Boundary verified.")
 
 def test_deployment_configs():
-    pkg_path = test_file_exists("package.json")
-    with open(pkg_path, "r", encoding="utf-8") as f:
-        pkg = json.load(f)
-    assert pkg.get("scripts", {}).get("build") == "vite build"
-
     v_path = test_file_exists("vercel.json")
     with open(v_path, "r", encoding="utf-8") as f:
         vercel = json.load(f)
     assert "headers" in vercel
-    assert "rewrites" in vercel
+    assert "rewrites" not in vercel, "vercel.json must NOT contain rewrites to avoid breaking script asset loading!"
+    
+    # Check max-age=3600
+    headers_str = json.dumps(vercel.get("headers", []))
+    assert "max-age=3600" in headers_str, "vercel.json should use safe 3600 cache for js/css"
+    print("[PASS] vercel.json safe static configuration (NO REWRITES, max-age=3600) verified.")
 
-    vite_path = test_file_exists("vite.config.js")
-    with open(vite_path, "r", encoding="utf-8") as f:
-        vite_content = f.read()
-    assert "outDir: 'dist'" in vite_content
-    print("[PASS] package.json, vercel.json, and vite.config.js verified.")
-
-def test_http_server():
-    try:
-        req = urllib.request.urlopen("http://localhost:8080/index.html", timeout=3)
-        assert req.status == 200
-        html = req.read().decode('utf-8')
-        assert "SafeRoute Guardian" in html
-        assert "js/bootstrap.js" in html
-        print("[PASS] Local HTTP server serving index.html cleanly (Status 200).")
-    except Exception as e:
-        print(f"[NOTE] HTTP server test note: {e}")
+def test_static_asset_contents():
+    test_files = [
+        "js/bootstrap.js",
+        "js/app.jsx",
+        "js/models/mockData.js",
+        "js/services/storageService.js",
+        "js/engine/riskEngine.js",
+        "css/style.css",
+        "css/light-theme.css",
+        "css/portal.css"
+    ]
+    for rel in test_files:
+        path = test_file_exists(rel)
+        with open(path, "r", encoding="utf-8") as f:
+            content = f.read()
+        assert not content.strip().startswith("<!DOCTYPE html>"), f"Asset {rel} contains HTML content instead of script/css!"
+        assert len(content) > 50, f"Asset {rel} is too small or empty!"
+    print("[PASS] All JS, JSX, and CSS static asset files contain genuine code (no HTML rewrites).")
 
 if __name__ == "__main__":
     print("=" * 65)
@@ -164,7 +166,7 @@ if __name__ == "__main__":
     test_onboarding_modal()
     test_app_jsx()
     test_deployment_configs()
-    test_http_server()
+    test_static_asset_contents()
     print("=" * 65)
-    print("  [SUCCESS] ALL 12 TEST CASES AND CONFIGURATIONS VERIFIED!")
+    print("  [SUCCESS] ALL VERIFICATION TESTS PASSED SUCCESSFULLY!")
     print("=" * 65)

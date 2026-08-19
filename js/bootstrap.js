@@ -121,12 +121,14 @@
 
   // Attach global error and unhandled rejection listeners
   window.addEventListener('error', function(event) {
-    console.error('[SafeRoute Guardian] Global Error Caught:', event.message, event.filename, event.lineno);
-    if (!isMounted) {
+    console.error('[SafeRoute Guardian] Global Error Caught:', event.message || event, event.filename, event.lineno);
+    // Ignore minor asset/tile network events from triggering fatal startup error screen
+    if (!event.filename && !event.message) return;
+    if (!isMounted && event.message) {
       renderFallbackErrorScreen(
         'We could not start the safety platform.',
-        'A runtime error prevented the application from starting.',
-        [event.message ? ('Error: ' + event.message) : 'Script loading error']
+        'A runtime script error prevented the application from starting.',
+        [event.message ? ('Error: ' + event.message + (event.filename ? ' (' + event.filename + ':' + event.lineno + ')' : '')) : 'Script execution error']
       );
     }
   });

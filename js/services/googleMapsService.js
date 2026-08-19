@@ -15,6 +15,7 @@ window.GoogleMapsService = (function() {
   'use strict';
 
   var loadPromise = null;
+  var runtimeKeyPromise = null;
   var authFailed = false;
   var authFailureListeners = [];
 
@@ -45,6 +46,32 @@ window.GoogleMapsService = (function() {
     );
   }
 
+  // A Vercel environment variable is not automatically available to a static
+  // browser script. Retrieve the deliberately public, referrer-restricted Maps
+  // key from the same deployment instead of hardcoding it in the repository.
+  function resolveApiKey(explicitKey) {
+    var configuredKey = explicitKey || (window.ConfigService && window.ConfigService.getGoogleMapsApiKey && window.ConfigService.getGoogleMapsApiKey()) || '';
+    if (configuredKey && configuredKey.length >= 6) {
+      return Promise.resolve(configuredKey);
+    }
+
+    if (!runtimeKeyPromise && typeof window.fetch === 'function') {
+      runtimeKeyPromise = window.fetch('/api/runtime-config', { cache: 'no-store' })
+        .then(function(response) {
+          if (!response.ok) throw new Error('Runtime map configuration is unavailable.');
+          return response.json();
+        })
+        .then(function(config) {
+          return config && typeof config.googleMapsApiKey === 'string' ? config.googleMapsApiKey.trim() : '';
+        })
+        .catch(function() {
+          return '';
+        });
+    }
+
+    return runtimeKeyPromise || Promise.resolve('');
+  }
+
   /**
    * Load Google Maps JS API script asynchronously as a singleton
    */
@@ -61,13 +88,12 @@ window.GoogleMapsService = (function() {
       return loadPromise;
     }
 
-    var key = explicitKey || (window.ConfigService && window.ConfigService.getGoogleMapsApiKey && window.ConfigService.getGoogleMapsApiKey()) || '';
+    loadPromise = resolveApiKey(explicitKey).then(function(key) {
+      if (!key || key.length < 6) {
+        throw new Error('Google Maps is not configured. Add GOOGLE_MAPS_API_KEY in Vercel Environment Variables.');
+      }
 
-    if (!key || key.length < 6) {
-      return Promise.reject(new Error('Missing or placeholder Google Maps API Key. Set VITE_GOOGLE_MAPS_API_KEY in environment variables.'));
-    }
-
-    loadPromise = new Promise(function(resolve, reject) {
+      return new Promise(function(resolve, reject) {
       var timeoutId = setTimeout(function() {
         if (!isLoaded()) {
           loadPromise = null;
@@ -116,7 +142,11 @@ window.GoogleMapsService = (function() {
         reject(new Error('Failed to download Google Maps JavaScript SDK (network error or blocked).'));
       };
 
-      document.head.appendChild(script);
+        document.head.appendChild(script);
+      });
+    }).catch(function(error) {
+      loadPromise = null;
+      throw error;
     });
 
     return loadPromise;

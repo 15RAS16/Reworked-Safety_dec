@@ -530,6 +530,7 @@ window.App = function() {
                 setLocalHelpRequests(window.StorageService.getLocalHelpRequests());
               }
             }}
+            onTriggerSos={handleTriggerSos}
             requests={localHelpRequests}
           />
         );
@@ -783,6 +784,7 @@ window.App = function() {
               setActiveTool('workspace');
               setIsRolePickerOpen(false);
             }}
+            onTriggerSos={handleTriggerSos}
           />
         )}
 

@@ -8,7 +8,7 @@ window.MapLegend = function({ corridorWidthMeters = 100, isCompact = false }) {
 
   return (
     <div className={`srg-map-legend-overlay ${collapsed ? 'collapsed' : ''}`}>
-      <div className="srg-legend-header" onClick={() => setCollapsed(!collapsed)}>
+      <div className="srg-legend-header">
         <span style={{ fontSize: '0.82rem', fontWeight: '800', color: '#1E293B', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
           <span>🗺️</span>
           <span>Map Legend</span>
@@ -17,6 +17,8 @@ window.MapLegend = function({ corridorWidthMeters = 100, isCompact = false }) {
           type="button"
           className="srg-legend-toggle"
           aria-label={collapsed ? 'Expand map legend' : 'Collapse map legend'}
+          aria-expanded={!collapsed}
+          onClick={() => setCollapsed(!collapsed)}
         >
           {collapsed ? '▴' : '▾'}
         </button>

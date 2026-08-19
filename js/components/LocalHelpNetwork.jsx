@@ -9,6 +9,7 @@ window.LocalHelpNetwork = function({
   onOpenCommunityReviews,
   onCreateRequest = () => {},
   onUpdateRequest = () => {},
+  onTriggerSos = () => {},
   requests = []
 }) {
   const [selectedCategory, setSelectedCategory] = React.useState('All');
@@ -224,7 +225,7 @@ window.LocalHelpNetwork = function({
               <b>Need urgent help?</b>
               <span>Emergency SOS alerts campus security and your trusted contacts immediately.</span>
             </div>
-            <button type="button" className="srg-btn srg-btn-emergency srg-btn-sm" onClick={() => setNotice('Emergency SOS is available anytime from the top bar or workspace.')}>
+            <button type="button" className="srg-btn srg-btn-emergency srg-btn-sm" onClick={() => onTriggerSos('LOCAL_HELP_URGENT_ASSISTANCE')}>
               SOS
             </button>
           </section>

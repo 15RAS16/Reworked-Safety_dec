@@ -455,23 +455,24 @@ window.GoogleCampusMap = function({
         justifyContent: 'center',
         color: '#94A3B8',
         padding: '2rem',
-        textAlign: 'center'
+        textAlign: 'center',
+        overflow: 'hidden'
       }}>
+        {/* The Google SDK needs a real, sized container before it can initialize. */}
+        <div id={mapId} ref={mapContainerRef} className="srg-map-container" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />
         <div style={{
-          width: '48px',
-          height: '48px',
-          borderRadius: '50%',
-          border: '3px solid #1E293B',
-          borderTopColor: '#38BDF8',
-          animation: 'spin 1s linear infinite',
-          marginBottom: '1rem'
-        }} />
-        <b style={{ color: '#FFFFFF', fontSize: '1.05rem', marginBottom: '0.4rem' }}>
-          Loading MMU Mullana Campus Safety Map…
-        </b>
-        <p style={{ fontSize: '0.82rem', color: '#94A3B8', maxWidth: '380px', margin: 0 }}>
-          Initializing Google Maps JavaScript API with high-precision campus corridors and safety geofence geometry.
-        </p>
+          position: 'relative',
+          zIndex: 2,
+          background: 'rgba(11, 21, 40, 0.94)',
+          borderRadius: '12px',
+          padding: '1.5rem',
+          maxWidth: '460px',
+          margin: '1rem'
+        }}>
+          <div style={{ width: '48px', height: '48px', borderRadius: '50%', border: '3px solid #1E293B', borderTopColor: '#38BDF8', animation: 'spin 1s linear infinite', margin: '0 auto 1rem' }} />
+          <b style={{ color: '#FFFFFF', fontSize: '1.05rem', marginBottom: '0.4rem', display: 'block' }}>Loading MMU Mullana Campus Safety Map…</b>
+          <p style={{ fontSize: '0.82rem', color: '#94A3B8', maxWidth: '380px', margin: 0 }}>Initializing Google Maps JavaScript API with high-precision campus corridors and safety geofence geometry.</p>
+        </div>
       </div>
     );
   }

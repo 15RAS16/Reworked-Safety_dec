@@ -10,7 +10,7 @@ When importing or configuring your project in the [Vercel Dashboard](https://ver
 
 | Setting | Exact Value | Description |
 |---|---|---|
-| **Root Directory** | `Reworked-Safety_dec` (or `./`) | The folder containing `index.html`, `js/`, and `css/`. |
+| **Root Directory** | `./` | This GitHub repository already opens at the folder containing `index.html`, `js/`, and `css/`. |
 | **Framework Preset** | `Other` | **Crucial:** Do NOT select "Vite". The site runs directly via browser Babel & native script loading. |
 | **Build Command** | *Empty / Disabled* | No build step should run (`npm run build` must NOT execute). |
 | **Output Directory** | *Empty / Disabled* | The root static directory is served directly (do NOT use `dist`). |

@@ -2,7 +2,7 @@
  * SafeRoute Guardian - Toast Notification Stack Component
  */
 
-window.ToastContainer = function({ toasts = [], onDismissToast }) {
+window.ToastContainer = function({ toasts = [], onDismissToast = () => {} }) {
   if (!toasts || toasts.length === 0) return null;
 
   return (
@@ -37,7 +37,8 @@ window.ToastContainer = function({ toasts = [], onDismissToast }) {
               <div style={{ fontSize: '0.78rem', color: '#CBD5E1', marginTop: '2px' }}>{toast.message}</div>
             </div>
             <button 
-              onClick={() => onDismissToast(toast.id)}
+              type="button"
+              onClick={() => onDismissToast && onDismissToast(toast.id)}
               style={{
                 background: 'transparent',
                 border: 'none',
@@ -46,6 +47,7 @@ window.ToastContainer = function({ toasts = [], onDismissToast }) {
                 fontSize: '1rem',
                 padding: '0 4px'
               }}
+              aria-label="Dismiss toast notification"
             >
               ×
             </button>

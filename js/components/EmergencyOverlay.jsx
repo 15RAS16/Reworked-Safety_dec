@@ -7,9 +7,9 @@
 window.EmergencyOverlay = function({
   isOpen,
   onCancelEmergency,
-  activeScenario,
-  currentPos,
-  riskData,
+  activeScenario = null,
+  currentPos = null,
+  riskData = null,
   triggerSource = 'SOS_BUTTON'
 }) {
   const [cancelProgress, setCancelProgress] = React.useState(0);
@@ -19,18 +19,24 @@ window.EmergencyOverlay = function({
   const cancelTimerRef = React.useRef(null);
   const startTimeRef = React.useRef(null);
 
+  const scenario = activeScenario || {
+    travelerName: 'Traveler',
+    travelerRole: 'MMU Campus Traveler',
+    routeName: 'MMU Campus Corridor'
+  };
+
   React.useEffect(() => {
     if (isOpen) {
-      if (!isMuted && window.AudioService) {
+      if (!isMuted && window.AudioService && typeof window.AudioService.startSiren === 'function') {
         window.AudioService.startSiren();
       }
     } else {
-      if (window.AudioService) {
+      if (window.AudioService && typeof window.AudioService.stopSiren === 'function') {
         window.AudioService.stopSiren();
       }
     }
     return () => {
-      if (window.AudioService) {
+      if (window.AudioService && typeof window.AudioService.stopSiren === 'function') {
         window.AudioService.stopSiren();
       }
     };
@@ -41,10 +47,14 @@ window.EmergencyOverlay = function({
   const toggleMute = () => {
     if (isMuted) {
       setIsMuted(false);
-      window.AudioService && window.AudioService.startSiren();
+      if (window.AudioService && typeof window.AudioService.startSiren === 'function') {
+        window.AudioService.startSiren();
+      }
     } else {
       setIsMuted(true);
-      window.AudioService && window.AudioService.stopSiren();
+      if (window.AudioService && typeof window.AudioService.stopSiren === 'function') {
+        window.AudioService.stopSiren();
+      }
     }
   };
 
@@ -52,7 +62,9 @@ window.EmergencyOverlay = function({
   const startCancelHold = () => {
     setIsHoldingCancel(true);
     startTimeRef.current = Date.now();
-    window.AudioService && window.AudioService.playTick();
+    if (window.AudioService && typeof window.AudioService.playTick === 'function') {
+      window.AudioService.playTick();
+    }
 
     cancelTimerRef.current = setInterval(() => {
       const elapsed = Date.now() - startTimeRef.current;
@@ -63,9 +75,11 @@ window.EmergencyOverlay = function({
         clearInterval(cancelTimerRef.current);
         setIsHoldingCancel(false);
         setCancelProgress(0);
-        window.AudioService && window.AudioService.stopSiren();
-        window.AudioService && window.AudioService.playSafeChime();
-        onCancelEmergency();
+        if (window.AudioService) {
+          if (typeof window.AudioService.stopSiren === 'function') window.AudioService.stopSiren();
+          if (typeof window.AudioService.playSafeChime === 'function') window.AudioService.playSafeChime();
+        }
+        if (onCancelEmergency) onCancelEmergency();
       }
     }, 40);
   };
@@ -78,7 +92,9 @@ window.EmergencyOverlay = function({
     setCancelProgress(0);
   };
 
-  const coordsText = currentPos ? `${currentPos[0].toFixed(5)}, ${currentPos[1].toFixed(5)}` : '37.77490, -122.41940';
+  const coordsText = (currentPos && currentPos.length >= 2)
+    ? `${currentPos[0].toFixed(5)}, ${currentPos[1].toFixed(5)}`
+    : '30.24720, 77.04680';
 
   return (
     <div className="srg-emergency-overlay">
@@ -101,10 +117,10 @@ window.EmergencyOverlay = function({
 
         {/* Live Incident Telemetry */}
         <div style={{ background: '#0F172A', border: '1px solid #334155', borderRadius: '12px', padding: '1rem', marginBottom: '1.2rem', fontSize: '0.82rem', color: '#CBD5E1', display: 'grid', gap: '0.4rem' }}>
-          <div>👤 <b>Traveler:</b> {activeScenario.travelerName} ({activeScenario.travelerRole})</div>
+          <div>👤 <b>Traveler:</b> {scenario.travelerName} ({scenario.travelerRole || 'MMU Student / Visitor'})</div>
           <div>📍 <b>GPS Coordinates:</b> <span style={{ fontFamily: 'monospace', color: '#38BDF8' }}>{coordsText}</span></div>
-          <div>🛤️ <b>Corridor:</b> {activeScenario.routeName}</div>
-          <div>⚡ <b>Trigger Source:</b> {triggerSource.replace('_', ' ')}</div>
+          <div>🛤️ <b>Corridor:</b> {scenario.routeName}</div>
+          <div>⚡ <b>Trigger Source:</b> {triggerSource.replace(/_/g, ' ')}</div>
           <div>🕒 <b>Timestamp:</b> {new Date().toLocaleTimeString()}</div>
         </div>
 

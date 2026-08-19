@@ -245,7 +245,7 @@ window.StorageService = (function() {
       try {
         const raw = localStorage.getItem(KEYS.DEPENDENTS);
         return raw ? JSON.parse(raw) : [
-          { id: 'dep-aarav', name: 'Aarav Sharma', relation: 'Son (15 yrs)', school: 'Oakwood High School', activeRoute: 'Student Commute', riskScore: 0, status: 'ON_ROUTE', battery: 84, lastCheckin: '12m ago' }
+          { id: 'dep-aarav', name: 'Aarav Sharma', relation: 'Son (15 yrs)', school: 'MMU Mullana Campus', activeRoute: 'Student Commute', riskScore: 0, status: 'ON_ROUTE', battery: 88, lastCheckin: '10m ago' }
         ];
       } catch (e) {
         return [];
@@ -264,7 +264,7 @@ window.StorageService = (function() {
         id: 'dep-' + Date.now(),
         name: depData.name || 'Child Traveler',
         relation: depData.relation || 'Dependent',
-        school: depData.school || 'Metro High',
+        school: depData.school || 'MMU Mullana Campus',
         activeRoute: depData.activeRoute || 'Student Commute',
         riskScore: 0,
         status: 'ON_ROUTE',
@@ -283,7 +283,7 @@ window.StorageService = (function() {
           soundEnabled: true,
           defaultEscalationMinutes: 15,
           highContrast: false,
-          emergencyNumbers: ['911', '112', '999']
+          emergencyNumbers: ['112', '100', '108']
         };
       } catch (e) {
         return { soundEnabled: true, defaultEscalationMinutes: 15 };

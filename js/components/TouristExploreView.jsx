@@ -1,7 +1,7 @@
 /**
  * SafeRoute Guardian - Tourist Explore Safely AI Intelligence Hub
  * Destination safety score, weather warnings, cellular dead-zone intelligence,
- * fastest vs safer route comparison, community reviews, and safe havens.
+ * fastest vs safer route comparison, community reviews, and safe havens for MMU Mullana.
  */
 
 window.TouristExploreView = function({
@@ -16,20 +16,20 @@ window.TouristExploreView = function({
 }) {
   const [activeRoute, setActiveRoute] = React.useState(selectedRouteType); // 'safer' | 'fastest'
   const destination = ((window.SRG_DATA && window.SRG_DATA.touristDestinations) || (window.MockData && window.MockData.touristDestinations) || [])[0] || {
-    id: 'dest-default',
-    name: 'Kyoto Historic Gion Corridor',
-    country: 'Japan',
-    description: 'Ancient heritage district featuring continuous ambient lantern lighting, frequent pedestrian foot traffic, active tourist police substations, and comprehensive CCTV safety corridors.',
-    safetyScore: 96,
+    id: 'dest-mmu-campus',
+    name: 'MMU Mullana University Campus Corridor',
+    country: 'India (Ambala, Haryana)',
+    description: 'Expansive multidisciplinary university campus featuring continuous LED safety illumination, integrated security check-posts, 24/7 super-speciality hospital, and pedestrian-only academic corridors.',
+    safetyScore: 95,
     weather: {
-      condition: 'Clear Sky',
-      temp: '22°C (72°F)',
-      advisory: 'Optimal visibility conditions throughout the designated walking corridor with gentle evening breeze.'
+      condition: 'Clear & Pleasant',
+      temp: '28°C (82°F)',
+      advisory: 'Optimal visibility conditions throughout the designated walking corridor with active campus safety patrols.'
     },
     deadZones: [
       {
-        name: 'Canal Alley Segment',
-        notes: 'Brief 30m cellular dead-spot under stone bridge. Automatic safe beacon pre-caches route coordinates.'
+        name: 'Outer Sports Ground Sector',
+        notes: 'Brief 25m cellular fluctuation near sports boundary trees. Automatic Safe Beacon pre-caches GPS coordinates.'
       }
     ]
   };
@@ -47,7 +47,7 @@ window.TouristExploreView = function({
         </button>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-          <span style={{ fontSize: '1.2rem' }}>🌸</span>
+          <span style={{ fontSize: '1.2rem' }}>🏛️</span>
           <span style={{ fontWeight: '800', color: '#FFFFFF', fontSize: '0.9rem' }}>
             Explore Safely Intelligence
           </span>
@@ -59,7 +59,7 @@ window.TouristExploreView = function({
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1.2rem' }}>
           <div style={{ maxWidth: '650px' }}>
             <div style={{ fontSize: '0.74rem', color: '#38BDF8', fontWeight: '800', letterSpacing: '0.08em', marginBottom: '0.25rem' }}>
-              TOURIST SAFETY INTELLIGENCE • {destination.country.toUpperCase()}
+              CAMPUS & VISITOR SAFETY INTELLIGENCE • {destination.country.toUpperCase()}
             </div>
             <h1 style={{ fontSize: '1.8rem', fontWeight: '900', color: '#FFFFFF', margin: '0 0 0.5rem 0' }}>
               {destination.name}
@@ -71,13 +71,13 @@ window.TouristExploreView = function({
 
           <div style={{ background: '#0F172A90', border: '1px solid #38BDF850', borderRadius: '16px', padding: '1rem 1.4rem', textAlign: 'center', backdropFilter: 'blur(10px)' }}>
             <div style={{ fontSize: '0.72rem', color: '#94A3B8', fontWeight: '800', letterSpacing: '0.05em' }}>
-              DESTINATION SAFETY INDEX
+              CAMPUS SAFETY INDEX
             </div>
             <div style={{ fontSize: '2.4rem', fontWeight: '900', color: '#10B981', lineHeight: '1.1', margin: '0.2rem 0' }}>
               {destination.safetyScore}
             </div>
             <div style={{ fontSize: '0.72rem', color: '#10B981', fontWeight: '700' }}>
-              ✓ Highly Recommended for Solo Travel
+              ✓ Verified Safe Campus Corridor
             </div>
           </div>
         </div>
@@ -91,7 +91,7 @@ window.TouristExploreView = function({
               ⚡ Fastest vs 🛡️ Safer Route Comparison
             </h3>
             <p style={{ fontSize: '0.84rem', color: '#94A3B8' }}>
-              AI analyzes street lighting, active businesses, pedestrian density, and CCTV coverage.
+              AI evaluates corridor lighting, security check-posts, and CCTV surveillance.
             </p>
           </div>
 
@@ -121,20 +121,20 @@ window.TouristExploreView = function({
               <span style={{ fontSize: '0.74rem', padding: '0.2rem 0.6rem', borderRadius: '999px', background: '#10B98125', color: '#10B981', fontWeight: '800' }}>
                 🛡️ RECOMMENDED BY GUARDIAN
               </span>
-              <b style={{ color: '#10B981', fontSize: '0.88rem' }}>Safety Score: 94/100</b>
+              <b style={{ color: '#10B981', fontSize: '0.88rem' }}>Safety Score: 95/100</b>
             </div>
 
             <h4 style={{ fontSize: '1.05rem', fontWeight: '800', color: '#FFFFFF', marginBottom: '0.4rem' }}>
-              Well-Lit Heritage Promenade
+              Main Academic Boulevard (Well-Lit)
             </h4>
             <div style={{ fontSize: '0.82rem', color: '#94A3B8', marginBottom: '0.8rem' }}>
-              18 mins • 1.4 km • +3 mins vs fastest
+              14 mins • 900 m • +2 mins vs fastest
             </div>
 
             <div style={{ display: 'grid', gap: '0.4rem', fontSize: '0.78rem', color: '#CBD5E1' }}>
-              <div>✓ 100% continuous street lighting & shopfronts</div>
-              <div>✓ 4 verified 24/7 convenience safe havens along route</div>
-              <div>✓ Active pedestrian foot traffic & emergency callboxes</div>
+              <div>✓ 100% continuous high-illumination LED street lighting</div>
+              <div>✓ 3 verified 24/7 security booths & central library helpdesk</div>
+              <div>✓ Active student foot traffic & campus emergency callboxes</div>
             </div>
           </div>
 
@@ -153,20 +153,20 @@ window.TouristExploreView = function({
               <span style={{ fontSize: '0.74rem', padding: '0.2rem 0.6rem', borderRadius: '999px', background: '#38BDF825', color: '#38BDF8', fontWeight: '800' }}>
                 ⚡ DIRECT COMMUTE
               </span>
-              <b style={{ color: '#F59E0B', fontSize: '0.88rem' }}>Safety Score: 68/100</b>
+              <b style={{ color: '#F59E0B', fontSize: '0.88rem' }}>Safety Score: 72/100</b>
             </div>
 
             <h4 style={{ fontSize: '1.05rem', fontWeight: '800', color: '#FFFFFF', marginBottom: '0.4rem' }}>
-              Direct Residential Alleyways
+              Outer Sports Field Perimeter Pathway
             </h4>
             <div style={{ fontSize: '0.82rem', color: '#94A3B8', marginBottom: '0.8rem' }}>
-              15 mins • 1.1 km • Saves 3 minutes
+              12 mins • 750 m • Saves 2 minutes
             </div>
 
             <div style={{ display: 'grid', gap: '0.4rem', fontSize: '0.78rem', color: '#CBD5E1' }}>
-              <div>⚠️ Narrow unlit alleyway segments after 20:00</div>
-              <div>⚠️ 1 cellular connectivity blindspot near canal</div>
-              <div>✓ Flat terrain and shortest walking distance</div>
+              <div>⚠️ Partial tree canopy shadows after 20:00</div>
+              <div>⚠️ 1 cellular dead-zone near sports boundary trees</div>
+              <div>✓ Shortest walking distance between Main Gate and Hostels</div>
             </div>
           </div>
         </div>
@@ -187,7 +187,7 @@ window.TouristExploreView = function({
             {destination.weather.advisory}
           </p>
           <div style={{ fontSize: '0.74rem', color: '#10B981', fontWeight: '700' }}>
-            Sunset: 18:42 • High visibility until 19:15
+            Sunset: 19:10 • Clear visibility on all academic paths
           </div>
         </div>
 
@@ -201,7 +201,7 @@ window.TouristExploreView = function({
             </div>
           </div>
           <p style={{ fontSize: '0.82rem', color: '#CBD5E1', lineHeight: '1.45', marginBottom: '0.8rem' }}>
-            {destination.deadZones[0] ? `Caution near ${destination.deadZones[0].name}: ${destination.deadZones[0].notes}` : 'No severe blindspots on main heritage path.'}
+            {destination.deadZones[0] ? `Caution near ${destination.deadZones[0].name}: ${destination.deadZones[0].notes}` : 'Continuous campus 5G coverage on main corridors.'}
           </p>
           <div style={{ fontSize: '0.74rem', color: '#38BDF8', fontWeight: '700' }}>
             Auto-Beacon will save your coordinates upon entry.
@@ -220,7 +220,7 @@ window.TouristExploreView = function({
           <div style={{ fontSize: '1.8rem', marginBottom: '0.5rem' }}>📍</div>
           <b style={{ color: '#FFFFFF', fontSize: '0.95rem', display: 'block' }}>Trusted Safe Spots</b>
           <p style={{ fontSize: '0.76rem', color: '#94A3B8', marginTop: '0.2rem' }}>
-            Find 24/7 verified police boxes, hospitals, and partner stores.
+            24/7 verified MMU security posts, hospital emergency, and student helpdesks.
           </p>
         </button>
 
@@ -233,7 +233,7 @@ window.TouristExploreView = function({
           <div style={{ fontSize: '1.8rem', marginBottom: '0.5rem' }}>⭐</div>
           <b style={{ color: '#FFFFFF', fontSize: '0.95rem', display: 'block' }}>Community Reviews</b>
           <p style={{ fontSize: '0.76rem', color: '#94A3B8', marginTop: '0.2rem' }}>
-            Read real verified traveler safety ratings and reports.
+            Read verified campus student and faculty reviews.
           </p>
         </button>
 
@@ -246,7 +246,7 @@ window.TouristExploreView = function({
           <div style={{ fontSize: '1.8rem', marginBottom: '0.5rem' }}>🤝</div>
           <b style={{ color: '#FFFFFF', fontSize: '0.95rem', display: 'block' }}>Local Help Network</b>
           <p style={{ fontSize: '0.76rem', color: '#94A3B8', marginTop: '0.2rem' }}>
-            Request language support or safe walking companions.
+            Request student safety volunteers or medical dispatch escort.
           </p>
         </button>
       </div>

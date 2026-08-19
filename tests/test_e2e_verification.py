@@ -108,24 +108,26 @@ def test_onboarding_modal():
     with open(path, "r", encoding="utf-8") as f:
         content = f.read()
 
-    # Step 2: Exactly 3 large cards
+    # Step 1: Exactly 3 large cards
     assert "How will you use SafeRoute Guardian?" in content
     assert "Continue as Tourist" in content
     assert "Continue as Parent / Guardian" in content
     assert "Continue as Organization" in content
 
-    # Step 3: Access type based on mode
-    assert "Self Use" in content
-    assert "Self Use / Guardian" in content
+    # Step 2 & 3: Access type & Organization position
     assert "Organization Administrator" in content
-    assert "Organization User / Staff" in content
+    assert "Staff Member" in content
+
+    # Step 4: Quick Evaluation Demo Personas (Post-login only)
+    assert "QUICK EVALUATION DEMO PERSONAS" in content
+    assert "Skip demo and continue" in content
 
     # Firestore profile parameters
     assert "primaryRole" in content
     assert "accessType" in content
     assert "allowedModes" in content
     assert "onboardingComplete" in content
-    print("[PASS] OnboardingModal.jsx 4-step guided RBAC flow verified.")
+    print("[PASS] OnboardingModal.jsx 4-step guided RBAC flow & post-login demo personas verified.")
 
 def test_app_jsx():
     path = test_file_exists("js/app.jsx")

@@ -1,6 +1,6 @@
 /**
  * SafeRoute Guardian - Header Navigation Bar Component
- * Displays system status, active role pill, demo mode banner, audio controls, and secure logout.
+ * Displays system status, active role pill, Test & Demo trigger, audio controls, and secure logout.
  */
 
 window.Header = function({
@@ -9,7 +9,8 @@ window.Header = function({
   safetyLevel = 'SAFE',
   onSignOut,
   currentUser = null,
-  onOpenRoles
+  onOpenRoles,
+  onOpenTestDemo
 }) {
   const [isAudioMuted, setIsAudioMuted] = React.useState(() => window.AudioService ? window.AudioService.isMuted : false);
 
@@ -18,7 +19,9 @@ window.Header = function({
       const next = !isAudioMuted;
       window.AudioService.isMuted = next;
       setIsAudioMuted(next);
-      if (!next) window.AudioService.playSafeChime();
+      if (!next && typeof window.AudioService.playSafeChime === 'function') {
+        window.AudioService.playSafeChime();
+      }
     }
   };
 
@@ -37,25 +40,29 @@ window.Header = function({
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <span className="srg-brand-title">SafeRoute Guardian</span>
-              <span className="srg-brand-badge">PRO v2.0</span>
+              <span className="srg-brand-badge">MMU MULLANA</span>
             </div>
-            <span className="srg-brand-sub">AI Corridor Protection • Antigravity</span>
+            <span className="srg-brand-sub">AI Campus Geofence • Safety Suite</span>
           </div>
         </div>
 
-        {/* Center: Active Role Indicator */}
+        {/* Center: Active Role Indicator & Test & Demo Button */}
         <div className="srg-header-center">
-          <div className="srg-role-pill" onClick={onOpenRoles} title="Active Workspace Role">
+          <div className="srg-role-pill" onClick={onOpenRoles} title="Click to Switch Safety Mode">
             <span className="srg-status-dot" style={{ background: '#10B981' }} />
             <span>{roleLabel}</span>
           </div>
 
-          {/* Permanent Demo / Simulated Badge */}
-          {window.ConfigService && window.ConfigService.isDemoModeEnabled() && (
-            <div className="srg-demo-pill" title="Isolated Simulation Mode">
-              <span>⚡ Simulated Demo</span>
-            </div>
-          )}
+          {/* Dedicated Test & Demo Simulation Button */}
+          <button
+            type="button"
+            className="srg-test-demo-badge"
+            onClick={onOpenTestDemo}
+            title="Open Controlled Competition Test & Demo Simulation Suite"
+          >
+            <span>⚡</span>
+            <span>Test & Demo</span>
+          </button>
         </div>
 
         {/* Right: Controls & User Profile */}
@@ -74,11 +81,11 @@ window.Header = function({
           {/* User Profile / Logout */}
           {currentUser && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-              <div style={{ textAlign: 'right', display: 'none', md: 'block' }} className="srg-user-meta">
+              <div style={{ textAlign: 'right' }} className="srg-user-meta">
                 <b style={{ color: '#FFFFFF', fontSize: '0.82rem', display: 'block' }}>
                   {currentUser.displayName || 'Traveler'}
                 </b>
-                <span style={{ fontSize: '0.7rem', color: '#94A3B8' }}>{currentUser.email}</span>
+                <span style={{ fontSize: '0.7rem', color: '#94A3B8' }}>{currentUser.email || ''}</span>
               </div>
 
               <button

@@ -69,21 +69,22 @@ window.App = function() {
   const [orgPermission, setOrgPermission] = React.useState('staff'); // 'staff' | 'admin'
   const [activeTool, setActiveTool] = React.useState('workspace');
   const [isRolePickerOpen, setIsRolePickerOpen] = React.useState(false);
+  const [isTestDemoOpen, setIsTestDemoOpen] = React.useState(false);
 
-  // 3. Journey & Scenario State (Safely initialized with defensive fallbacks)
+  // 3. Journey & Scenario State (MMU Mullana Campus Defaults)
   const initialScenarios = (window.StorageService && typeof window.StorageService.getRoutes === 'function' ? window.StorageService.getRoutes() : null) ||
     (window.SRG_DATA && window.SRG_DATA.scenarios) ||
     (window.MockData && window.MockData.scenarios) ||
     [];
 
+  const defaultMmuCoords = [30.2472, 77.0468]; // MMU Main Gate
   const [scenarios, setScenarios] = React.useState(initialScenarios);
   const [activeScenario, setActiveScenario] = React.useState(() => {
     return (initialScenarios && initialScenarios.length > 0) ? initialScenarios[0] : null;
   });
 
-  const defaultCoords = [37.7950, -122.4020];
   const [currentPos, setCurrentPos] = React.useState(() => {
-    return (initialScenarios && initialScenarios[0] && initialScenarios[0].originCoords) ? initialScenarios[0].originCoords : defaultCoords;
+    return (initialScenarios && initialScenarios[0] && initialScenarios[0].originCoords) ? initialScenarios[0].originCoords : defaultMmuCoords;
   });
 
   const [journeyState, setJourneyState] = React.useState({
@@ -97,7 +98,7 @@ window.App = function() {
     isSosActive: false
   });
 
-  // 4. Alerts, Contacts, Timeline, and Local Help State
+  // 4. Alerts, Contacts, Timeline, Reviews, and Local Help State
   const [alerts, setAlerts] = React.useState(() => {
     return (window.StorageService && typeof window.StorageService.getAlerts === 'function') ? window.StorageService.getAlerts() : [];
   });
@@ -106,6 +107,9 @@ window.App = function() {
   });
   const [journeyTimeline, setJourneyTimeline] = React.useState(() => {
     return (window.StorageService && (window.StorageService.getTimeline ? window.StorageService.getTimeline() : (window.StorageService.getJourneyTimeline ? window.StorageService.getJourneyTimeline() : []))) || [];
+  });
+  const [communityReviews, setCommunityReviews] = React.useState(() => {
+    return (window.StorageService && typeof window.StorageService.getCommunityReviews === 'function') ? window.StorageService.getCommunityReviews() : ((window.SRG_DATA && window.SRG_DATA.defaultCommunityReviews) || []);
   });
   const [localHelpRequests, setLocalHelpRequests] = React.useState(() => {
     return (window.StorageService && typeof window.StorageService.getLocalHelpRequests === 'function') ? window.StorageService.getLocalHelpRequests() : [];
@@ -119,12 +123,16 @@ window.App = function() {
   const [checkinCountdownSeconds, setCheckinCountdownSeconds] = React.useState(900); // 15 mins default
   const [toastMessages, setToastMessages] = React.useState([]);
 
-  const addToast = (msg, type = 'info') => {
+  const addToast = (msg, type = 'info', title = '') => {
     const id = Date.now() + Math.random();
-    setToastMessages(prev => [...prev, { id, message: msg, type }]);
+    setToastMessages(prev => [...prev, { id, message: msg, type, title: title || (type === 'emergency' ? '🚨 EMERGENCY' : type === 'warning' ? '⚠️ WARNING' : 'ℹ️ NOTIFICATION') }]);
     setTimeout(() => {
       setToastMessages(prev => prev.filter(t => t.id !== id));
-    }, 4500);
+    }, 5000);
+  };
+
+  const handleDismissToast = (id) => {
+    setToastMessages(prev => prev.filter(t => t.id !== id));
   };
 
   // Listen to Firebase Auth state changes
@@ -177,7 +185,7 @@ window.App = function() {
     }
   }, [activeScenario]);
 
-  // Compute Risk Engine Score Deterministically (v2.0 Point-to-Segment)
+  // Compute Risk Engine Score Deterministically
   const riskData = React.useMemo(() => {
     if (!activeScenario || !window.RiskEngine || typeof window.RiskEngine.assessRisk !== 'function') {
       return {
@@ -188,15 +196,15 @@ window.App = function() {
         distanceOffCorridor: 0,
         factors: [],
         primaryFactor: 'Normal On-Route Travel',
-        plainExplanation: 'You are traveling safely along the designated corridor.',
-        recommendedAction: 'Continue along the approved route.',
+        plainExplanation: 'You are traveling safely along the designated campus corridor.',
+        recommendedAction: 'Continue along the approved route toward your destination.',
         summary: 'Safe (0/100) — On-route travel.'
       };
     }
 
     return window.RiskEngine.assessRisk({
       travelerName: activeScenario.travelerName || 'Traveler',
-      currentPos: currentPos || (activeScenario.originCoords || defaultCoords),
+      currentPos: currentPos || (activeScenario.originCoords || defaultMmuCoords),
       routeWaypoints: activeScenario.routeWaypoints || [],
       corridorWidthMeters: activeScenario.corridorWidthMeters || 100,
       timeOffRouteSeconds: journeyState.timeOffRouteSeconds || 0,
@@ -264,7 +272,7 @@ window.App = function() {
       type: '🚨 EMERGENCY SOS PANIC',
       severity: 'emergency',
       travelerName: tName,
-      message: `Active emergency panic triggered via ${source.replace(/_/g, ' ')}. Coordinates broadcast to emergency network.`,
+      message: `Active emergency panic triggered via ${source.replace(/_/g, ' ')}. Coordinates broadcast to MMU campus safety network.`,
       timestamp: new Date().toISOString(),
       status: 'ACTIVE'
     };
@@ -306,17 +314,19 @@ window.App = function() {
     if (stepKey === 'SAFE_ON_ROUTE') {
       if (activeScenario.routeWaypoints && activeScenario.routeWaypoints[1]) {
         setCurrentPos(activeScenario.routeWaypoints[1]);
+      } else if (activeScenario.originCoords) {
+        setCurrentPos(activeScenario.originCoords);
       }
       setJourneyState(prev => ({ ...prev, timeOffRouteSeconds: 0, isMovingFarther: false, checkinStatus: 'NOT_NEEDED', isSosActive: false }));
       setIsCheckinModalOpen(false);
       addToast('Traveler positioned safely within designated corridor buffer.', 'success');
     } else if (stepKey === 'MINOR_DEVIATION') {
-      const wp = (activeScenario.routeWaypoints && activeScenario.routeWaypoints[1]) ? activeScenario.routeWaypoints[1] : defaultCoords;
+      const wp = (activeScenario.routeWaypoints && activeScenario.routeWaypoints[1]) ? activeScenario.routeWaypoints[1] : defaultMmuCoords;
       setCurrentPos([wp[0] + 0.0012, wp[1] + 0.0012]);
       setJourneyState(prev => ({ ...prev, timeOffRouteSeconds: 45, isMovingFarther: false, checkinStatus: 'NOT_NEEDED' }));
-      addToast('Minor deviation simulated (~140m outside corridor). Caution advice issued.', 'warning');
+      addToast('Minor deviation simulated (~120m outside corridor). Caution advice issued.', 'warning');
     } else if (stepKey === 'SEVERE_DEVIATION') {
-      const wp = (activeScenario.routeWaypoints && activeScenario.routeWaypoints[2]) ? activeScenario.routeWaypoints[2] : defaultCoords;
+      const wp = (activeScenario.routeWaypoints && activeScenario.routeWaypoints[2]) ? activeScenario.routeWaypoints[2] : defaultMmuCoords;
       setCurrentPos([wp[0] + 0.0040, wp[1] + 0.0040]);
       setJourneyState(prev => ({ ...prev, timeOffRouteSeconds: 240, isMovingFarther: true, checkinStatus: 'PENDING' }));
       setIsCheckinModalOpen(true);
@@ -327,8 +337,8 @@ window.App = function() {
       }
       addToast('High Risk Drift simulated (~450m). "Are you safe?" check-in prompt triggered.', 'warning');
     } else if (stepKey === 'RETURN_TO_ROUTE') {
-      const wp = (activeScenario.routeWaypoints && activeScenario.routeWaypoints[2]) ? activeScenario.routeWaypoints[2] : defaultCoords;
-      setCurrentPos([wp[0] + 0.0004, wp[1] + 0.0004]);
+      const wp = (activeScenario.routeWaypoints && activeScenario.routeWaypoints[2]) ? activeScenario.routeWaypoints[2] : defaultMmuCoords;
+      setCurrentPos([wp[0] + 0.0003, wp[1] + 0.0003]);
       setJourneyState(prev => ({ ...prev, timeOffRouteSeconds: 15, isMovingFarther: false, checkinStatus: 'ACKNOWLEDGED' }));
       setIsCheckinModalOpen(false);
       addToast('Traveler heading vector returning toward approved corridor.', 'success');
@@ -341,6 +351,28 @@ window.App = function() {
     }
   };
 
+  // Reset Demo to Role Default
+  const handleResetDemo = () => {
+    const defaultSc = (scenarios && scenarios.length > 0) ? scenarios[0] : safeActiveScenario;
+    setActiveScenario(defaultSc);
+    if (defaultSc && defaultSc.originCoords) {
+      setCurrentPos(defaultSc.originCoords);
+    }
+    setJourneyState({
+      status: 'IN_TRANSIT',
+      etaMinutes: 14,
+      speedKmh: 4.2,
+      timeOffRouteSeconds: 0,
+      isMovingFarther: false,
+      isNight: false,
+      checkinStatus: 'NOT_NEEDED',
+      isSosActive: false
+    });
+    setIsCheckinModalOpen(false);
+    setIsEmergencyOverlayOpen(false);
+    addToast('Demo scenario reset to MMU Mullana campus defaults.', 'info');
+  };
+
   // Sign Out Handler
   const handleSignOut = async () => {
     if (window.FirebaseService && typeof window.FirebaseService.signOutUser === 'function') {
@@ -350,23 +382,29 @@ window.App = function() {
     setActiveTool('workspace');
     setIsRolePickerOpen(false);
     setShowOnboarding(false);
+    setIsTestDemoOpen(false);
     addToast('Signed out securely.', 'info');
   };
 
   // Safe fallback if active scenario is null
   const safeActiveScenario = activeScenario || {
-    id: 'default-tourist',
-    travelerName: 'Elena Rostova',
-    travelerRole: 'International Tourist',
-    avatar: '🧭',
-    routeName: 'Historic Plaza → Bayfront Promenade',
-    originName: 'Historic Plaza',
-    destinationName: 'Bayfront Promenade',
-    corridorWidthMeters: 150,
+    id: 'student-campus-commute',
+    travelerName: 'Aarav Sharma',
+    travelerRole: 'Engineering Student (MMU Mullana)',
+    avatar: '🎒',
+    routeName: 'MMU Main Gate → Central Library & Academic Block',
+    originName: 'MMU Main Gate (Ambala Road)',
+    destinationName: 'Engineering Academic Block 3',
+    corridorWidthMeters: 100,
     escalationTimeoutMinutes: 15,
-    routeWaypoints: [[37.7950, -122.4020], [37.7980, -122.4035], [37.8010, -122.4050], [37.8050, -122.4080]],
-    originCoords: [37.7950, -122.4020],
-    destinationCoords: [37.8050, -122.4080]
+    routeWaypoints: [
+      [30.2472, 77.0468],
+      [30.2485, 77.0478],
+      [30.2495, 77.0492],
+      [30.2505, 77.0505]
+    ],
+    originCoords: [30.2472, 77.0468],
+    destinationCoords: [30.2505, 77.0505]
   };
 
   // Allowed modes for current user
@@ -374,7 +412,7 @@ window.App = function() {
 
   // Render Authorized Views with Route Guards
   const renderActiveView = () => {
-    // Role & Workspace Switcher Page (Accessible only for authorized modes)
+    // Role & Workspace Switcher Page
     if (isRolePickerOpen) {
       return (
         <window.LandingSection
@@ -382,7 +420,6 @@ window.App = function() {
           orgPermission={orgPermission}
           allowedModes={allowedModes}
           onSelectRole={(r) => {
-            // Strict role guard: only allow switching to backend-authorized modes
             if (currentUser && currentUser.isDemoUser) {
               setCurrentRole(r);
               setIsRolePickerOpen(false);
@@ -460,10 +497,42 @@ window.App = function() {
         return <window.TrustedSafeSpots onBackToWorkspace={() => setActiveTool('workspace')} riskData={riskData} />;
       }
       if (activeTool === 'community-reviews') {
-        return <window.CommunityReviewsView onBackToWorkspace={() => setActiveTool('workspace')} onOpenExploreSafely={() => setActiveTool('tourist-explore')} />;
+        return (
+          <window.CommunityReviewsView
+            onBackToWorkspace={() => setActiveTool('workspace')}
+            onOpenExploreSafely={() => setActiveTool('tourist-explore')}
+            communityReviews={communityReviews}
+            onAddReview={(newRev) => {
+              if (window.StorageService && typeof window.StorageService.addCommunityReview === 'function') {
+                window.StorageService.addCommunityReview(newRev);
+                setCommunityReviews(window.StorageService.getCommunityReviews());
+              }
+            }}
+          />
+        );
       }
       if (activeTool === 'local-help') {
-        return <window.LocalHelpNetwork onBackToWorkspace={() => setActiveTool('workspace')} activeScenario={safeActiveScenario} onOpenExploreSafely={() => setActiveTool('tourist-explore')} onOpenCommunityReviews={() => setActiveTool('community-reviews')} />;
+        return (
+          <window.LocalHelpNetwork
+            onBackToWorkspace={() => setActiveTool('workspace')}
+            activeScenario={safeActiveScenario}
+            onOpenExploreSafely={() => setActiveTool('tourist-explore')}
+            onOpenCommunityReviews={() => setActiveTool('community-reviews')}
+            onCreateRequest={(req) => {
+              if (window.StorageService && typeof window.StorageService.addLocalHelpRequest === 'function') {
+                window.StorageService.addLocalHelpRequest(req);
+                setLocalHelpRequests(window.StorageService.getLocalHelpRequests());
+              }
+            }}
+            onUpdateRequest={(id, updates) => {
+              if (window.StorageService && typeof window.StorageService.updateLocalHelpRequest === 'function') {
+                window.StorageService.updateLocalHelpRequest(id, updates);
+                setLocalHelpRequests(window.StorageService.getLocalHelpRequests());
+              }
+            }}
+            requests={localHelpRequests}
+          />
+        );
       }
       if (activeTool === 'timeline' || activeTool === 'journey-timeline') {
         return (
@@ -626,12 +695,12 @@ window.App = function() {
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: '#0A192F', color: '#94A3B8', fontFamily: 'sans-serif' }}>
         <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>🛡️</div>
         <h2 style={{ color: '#FFFFFF', margin: 0, fontFamily: 'Plus Jakarta Sans, sans-serif' }}>SafeRoute Guardian</h2>
-        <p style={{ fontSize: '0.85rem', marginTop: '0.4rem' }}>Initializing AI Safety Engine & Live Corridor Map...</p>
+        <p style={{ fontSize: '0.85rem', marginTop: '0.4rem' }}>Initializing AI Safety Engine & MMU Campus Geofence Map...</p>
       </div>
     );
   }
 
-  // Not Logged In -> Login Portal
+  // Not Logged In -> Clean Minimal Instagram-Style Login Portal
   if (!currentUser) {
     return <window.LoginPortal onLoginSuccess={(u) => setCurrentUser(u)} />;
   }
@@ -639,7 +708,7 @@ window.App = function() {
   return (
     <AppErrorBoundary>
       <div className="srg-app-shell">
-        {/* Global Header */}
+        {/* Global Header with Test & Demo Button */}
         <window.Header
           currentRole={currentRole}
           orgPermission={orgPermission}
@@ -647,6 +716,7 @@ window.App = function() {
           onSignOut={handleSignOut}
           currentUser={currentUser}
           onOpenRoles={() => setIsRolePickerOpen(!isRolePickerOpen)}
+          onOpenTestDemo={() => setIsTestDemoOpen(true)}
         />
 
         {/* Main Workspace Layout with Sidebar & Content */}
@@ -667,6 +737,17 @@ window.App = function() {
           </main>
         </div>
 
+        {/* Dedicated Test & Demo Simulation Suite Modal */}
+        <window.TestDemoModal
+          isOpen={isTestDemoOpen}
+          onClose={() => setIsTestDemoOpen(false)}
+          currentRole={currentRole}
+          orgPermission={orgPermission}
+          activeScenario={safeActiveScenario}
+          onTriggerDemoStep={handleTriggerDemoStep}
+          onResetDemo={handleResetDemo}
+        />
+
         {/* Full-Screen Emergency Overlay */}
         <window.EmergencyOverlay
           isOpen={isEmergencyOverlayOpen}
@@ -684,13 +765,17 @@ window.App = function() {
           onTriggerEmergency={() => handleTriggerSos('CHECKIN_PROMPT_EMERGENCY')}
           countdownSeconds={checkinCountdownSeconds}
           travelerName={safeActiveScenario.travelerName}
-          distanceOffRouteMeters={riskData ? riskData.distanceOffCorridor : 140}
+          distanceOffRouteMeters={riskData ? riskData.distanceOffCorridor : 120}
         />
 
-        {/* First-Time User Onboarding Modal */}
+        {/* First-Time User Onboarding Modal (Post-Login) */}
         {showOnboarding && (
           <window.OnboardingModal
             currentUser={currentUser}
+            onSelectDemoScenario={(sc) => {
+              setActiveScenario(sc);
+              if (sc && sc.originCoords) setCurrentPos(sc.originCoords);
+            }}
             onCompleteOnboarding={(role, perm, access) => {
               setCurrentRole(role);
               setOrgPermission(perm);
@@ -702,7 +787,10 @@ window.App = function() {
         )}
 
         {/* Global Toast Notifications */}
-        <window.ToastContainer toasts={toastMessages} />
+        <window.ToastContainer
+          toasts={toastMessages}
+          onDismissToast={handleDismissToast}
+        />
       </div>
     </AppErrorBoundary>
   );

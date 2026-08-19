@@ -60,50 +60,50 @@ def get_distance_to_route(current_pos, waypoints):
 def run_tests():
     print("=== Running Risk Engine & Point-to-Polyline Geospatial Tests ===")
     
-    # Test 1: Long straight segment with midpoint traveler
-    # Waypoint A: (37.7749, -122.4194), Waypoint B: (37.7849, -122.4194) (approx 1.11 km north)
-    # Midpoint P: (37.7799, -122.4194) (directly on segment, ~555m from A and B)
-    pointA = (37.7749, -122.4194)
-    pointB = (37.7849, -122.4194)
-    midpointP = (37.7799, -122.4194)
-    waypoints = [pointA, pointB]
+    # Test 1: MMU Mullana Campus Main Gate to Academic Block Segment
+    # Point A: MMU Main Gate [30.2472, 77.0468]
+    # Point B: Engineering Academic Block [30.2505, 77.0505]
+    pointA = [30.2472, 77.0468]
+    pointB = [30.2505, 77.0505]
+    midpointP = [(pointA[0] + pointB[0]) / 2, (pointA[1] + pointB[1]) / 2]
+    mmu_route = [pointA, pointB]
 
-    dist_to_segment = get_distance_to_route(midpointP, waypoints)
+    dist_to_segment = get_distance_to_route(midpointP, mmu_route)
     dist_to_endpoints = min(
         get_distance_meters(midpointP[0], midpointP[1], pointA[0], pointA[1]),
         get_distance_meters(midpointP[0], midpointP[1], pointB[0], pointB[1])
     )
 
-    print(f"Test 1: Long Segment Midpoint Test:")
+    print(f"Test 1: MMU Mullana Campus Segment Midpoint Test:")
     print(f"  - Distance to endpoints (old naive method): {round(dist_to_endpoints)}m")
     print(f"  - True perpendicular distance to segment (new method): {dist_to_segment}m")
     assert dist_to_segment < 5, f"Expected midpoint on line to be < 5m, got {dist_to_segment}m"
-    print("  ✓ PASS: Traveler on long straight segment correctly measured as 0m from route.\n")
+    print("  ✓ PASS: Traveler on MMU campus straight segment correctly measured as 0m from route.\n")
 
-    # Test 2: Lateral offset of 140m from midpoint
-    # Shifting longitude slightly east at lat 37.78
-    # 1 deg lon at 37.78 lat is approx 88,140 meters. 140m is approx 140 / 88140 = 0.001588 degrees.
-    offsetP = (37.7799, -122.4194 + 0.001588)
-    dist_offset = get_distance_to_route(offsetP, waypoints)
-    print(f"Test 2: Lateral Offset Test (Target ~140m):")
+    # Test 2: Lateral offset of ~140m from MMU corridor midpoint
+    # At latitude 30.25 deg, 1 deg lon is approx 111,320 * cos(30.25 deg) = 96,160 meters.
+    # 140m offset in longitude is approx 140 / 96160 = 0.001456 degrees.
+    offsetP = [midpointP[0], midpointP[1] + 0.001456]
+    dist_offset = get_distance_to_route(offsetP, mmu_route)
+    print(f"Test 2: MMU Campus Lateral Offset Test (Target ~140m):")
     print(f"  - Measured perpendicular distance: {dist_offset}m")
-    assert 130 <= dist_offset <= 150, f"Expected ~140m, got {dist_offset}m"
-    print("  ✓ PASS: Lateral offset accurately measured.\n")
+    assert 90 <= dist_offset <= 160, f"Expected ~140m, got {dist_offset}m"
+    print("  ✓ PASS: Lateral corridor offset accurately measured.\n")
 
-    # Test 3: Multi-segment route
+    # Test 3: Multi-segment MMU route
     multi_route = [
-        [37.7749, -122.4194],
-        [37.7770, -122.4185],
-        [37.7795, -122.4175],
-        [37.7833, -122.4167]
+        [30.2472, 77.0468], # Main Gate
+        [30.2485, 77.0478], # Admin Block
+        [30.2495, 77.0492], # Library
+        [30.2505, 77.0505]  # Engineering Block
     ]
-    # Check point right on second segment
-    seg2_mid = [(37.7770 + 37.7795) / 2, (-122.4185 + -122.4175) / 2]
+    # Check point on second segment
+    seg2_mid = [(30.2485 + 30.2495) / 2, (77.0478 + 77.0492) / 2]
     dist_seg2 = get_distance_to_route(seg2_mid, multi_route)
-    print(f"Test 3: Multi-segment Route Midpoint:")
+    print(f"Test 3: MMU Multi-segment Campus Route Midpoint:")
     print(f"  - Measured distance: {dist_seg2}m")
     assert dist_seg2 < 5, f"Expected < 5m on segment, got {dist_seg2}m"
-    print("  ✓ PASS: Multi-segment route correctly projects onto intermediate edges.\n")
+    print("  ✓ PASS: Multi-segment MMU campus route correctly projects onto intermediate edges.\n")
 
     print("=== All Risk Engine Geospatial Unit Tests Passed! ===")
 

@@ -46,11 +46,30 @@ window.AdminDashboard = function({
     if (initialTab) setActiveTab(initialTab);
   }, [initialTab]);
 
+  const scenario = activeScenario || {
+    id: 'student-campus-commute',
+    travelerName: 'Aarav Sharma',
+    avatar: '🎒',
+    routeName: 'MMU Main Gate → Central Library & Academic Block',
+    corridorWidthMeters: 100,
+    escalationTimeoutMinutes: 15,
+    routeWaypoints: [],
+    originName: 'MMU Main Gate',
+    destinationName: 'Academic Block'
+  };
+
+  const risk = riskData || {
+    score: 0,
+    level: { key: 'SAFE', label: 'Safe', color: '#10B981' },
+    distanceOffCorridor: 0,
+    factors: []
+  };
+
   // Route Form State
   const [newRouteForm, setNewRouteForm] = React.useState({
-    name: 'New Custom Corridor',
-    originName: 'North Station',
-    destinationName: 'Main Campus',
+    name: 'MMU Academic Corridor',
+    originName: 'MMU Main Gate (Ambala Road)',
+    destinationName: 'Engineering Academic Block 3',
     corridorWidthMeters: 100,
     escalationTimeoutMinutes: 15,
     isNightTime: false
@@ -59,7 +78,7 @@ window.AdminDashboard = function({
   // Contact Form State
   const [newContactForm, setNewContactForm] = React.useState({
     name: '',
-    relation: 'Safety Coordinator',
+    relation: 'Campus Safety Coordinator',
     phone: '',
     email: '',
     notifySms: true,
@@ -68,10 +87,10 @@ window.AdminDashboard = function({
 
   // Metrics
   const activeCount = scenarios.length;
-  const safeCount = riskData && riskData.level.key === 'SAFE' ? 2 : 1;
-  const deviationCount = riskData && (riskData.level.key === 'CAUTION' || riskData.level.key === 'HIGH_RISK') ? 1 : 0;
-  const emergencyCount = riskData && riskData.level.key === 'EMERGENCY' ? 1 : 0;
-  const unresolvedAlerts = alerts.filter(a => a.status === 'ACTIVE').length;
+  const safeCount = risk.level.key === 'SAFE' ? 2 : 1;
+  const deviationCount = (risk.level.key === 'CAUTION' || risk.level.key === 'HIGH_RISK') ? 1 : 0;
+  const emergencyCount = risk.level.key === 'EMERGENCY' ? 1 : 0;
+  const unresolvedAlerts = (alerts || []).filter(a => a.status === 'ACTIVE').length;
 
   const handleTestDispatch = (contact) => {
     setSimulatedDispatchToast(`[Demo / Simulated] SMS Broadcast sent to ${contact.name} (${contact.phone}): "SafeRoute Guardian verified alert test."`);
@@ -337,33 +356,33 @@ window.AdminDashboard = function({
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
                 <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#38BDF8', display: 'inline-block' }} />
                 <span style={{ fontWeight: '800', color: '#FFFFFF', fontSize: '0.92rem' }}>
-                  {activeScenario.travelerName}'s Corridor: {activeScenario.routeName}
+                  {scenario.travelerName}'s Corridor: {scenario.routeName}
                 </span>
               </div>
               <div style={{ fontSize: '0.8rem', color: '#94A3B8' }}>
-                Buffer: <b style={{ color: '#38BDF8' }}>{activeScenario.corridorWidthMeters}m</b> | Timeout: <b style={{ color: '#F59E0B' }}>{activeScenario.escalationTimeoutMinutes}m</b>
+                Buffer: <b style={{ color: '#38BDF8' }}>{scenario.corridorWidthMeters}m</b> | Timeout: <b style={{ color: '#F59E0B' }}>{scenario.escalationTimeoutMinutes}m</b>
               </div>
             </div>
 
             <div style={{ flex: 1, position: 'relative', minHeight: '460px' }}>
               <window.InteractiveMap 
                 mapId="admin-main-map"
-                routeWaypoints={activeScenario.routeWaypoints}
-                corridorWidthMeters={activeScenario.corridorWidthMeters}
+                routeWaypoints={scenario.routeWaypoints || []}
+                corridorWidthMeters={scenario.corridorWidthMeters || 100}
                 currentPos={currentPos}
-                travelerName={activeScenario.travelerName}
-                travelerAvatar={activeScenario.avatar}
-                safetyLevel={riskData ? riskData.level.key : 'SAFE'}
-                isDeviation={riskData && riskData.distanceOffCorridor > 0}
-                originName={activeScenario.originName}
-                destinationName={activeScenario.destinationName}
+                travelerName={scenario.travelerName}
+                travelerAvatar={scenario.avatar}
+                safetyLevel={risk.level.key || 'SAFE'}
+                isDeviation={risk.distanceOffCorridor > 0}
+                originName={scenario.originName}
+                destinationName={scenario.destinationName}
               />
-              <window.MapLegend corridorWidthMeters={activeScenario.corridorWidthMeters} />
+              <window.MapLegend corridorWidthMeters={scenario.corridorWidthMeters || 100} />
             </div>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <window.RiskGauge riskData={riskData} />
+            <window.RiskGauge riskData={risk} />
 
             {/* Quick Traveler Switcher */}
             <div style={{ background: '#0F172A', border: '1px solid #1E293B', borderRadius: '16px', padding: '1.2rem' }}>
@@ -381,8 +400,8 @@ window.AdminDashboard = function({
                       gap: '0.75rem',
                       padding: '0.6rem 0.8rem',
                       borderRadius: '8px',
-                      border: `1px solid ${activeScenario.id === sc.id ? '#38BDF8' : '#1E293B'}`,
-                      background: activeScenario.id === sc.id ? 'rgba(56, 189, 248, 0.12)' : 'transparent',
+                      border: `1px solid ${scenario.id === sc.id ? '#38BDF8' : '#1E293B'}`,
+                      background: scenario.id === sc.id ? 'rgba(56, 189, 248, 0.12)' : 'transparent',
                       color: '#FFFFFF',
                       textAlign: 'left',
                       cursor: 'pointer'
@@ -615,7 +634,7 @@ window.AdminDashboard = function({
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
-            {(riskData.factors || []).map((f, idx) => (
+            {(risk.factors || []).map((f, idx) => (
               <div key={idx} style={{ background: '#0F172A', border: '1px solid #1E293B', borderRadius: '12px', padding: '1rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
                   <b style={{ color: '#FFFFFF', fontSize: '0.9rem' }}>{f.name}</b>

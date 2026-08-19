@@ -1,26 +1,40 @@
 /**
  * SafeRoute Guardian - Parent / Guardian Family Safety Dashboard
  * Calm, reassuring interface displaying linked dependents, live route tracking,
- * risk gauges, Safe Beacon updates, and family emergency contacts.
+ * risk gauges, Safe Beacon updates, and family emergency contacts for MMU Mullana campus.
  */
 
 window.ParentDashboard = function({
   onBackToWorkspace,
-  activeScenario,
-  riskData,
-  currentPos,
-  journeyState,
-  safeBeacon,
+  activeScenario = null,
+  riskData = null,
+  currentPos = null,
+  journeyState = {},
+  safeBeacon = null,
   alerts = [],
   contacts = [],
   journeyTimeline = [],
   onTriggerSos
 }) {
-  const [dependents, setDependents] = React.useState(() => window.StorageService.getLinkedDependents());
+  const [dependents, setDependents] = React.useState(() => {
+    return (window.StorageService && typeof window.StorageService.getLinkedDependents === 'function')
+      ? window.StorageService.getLinkedDependents()
+      : [{ id: 'dep-1', name: 'Aarav Sharma', relation: 'Son (15 yrs)', school: 'MMU Mullana Campus', battery: 88 }];
+  });
   const [selectedDependent, setSelectedDependent] = React.useState(() => dependents[0] || null);
   const [showLinkModal, setShowLinkModal] = React.useState(false);
-  const [linkForm, setLinkForm] = React.useState({ name: '', relation: 'Son / Daughter', school: 'Oakwood High School' });
+  const [linkForm, setLinkForm] = React.useState({ name: '', relation: 'Son / Daughter', school: 'MMU Mullana Campus' });
   const [generatedInvite, setGeneratedInvite] = React.useState(null);
+
+  const scenario = activeScenario || {
+    travelerName: 'Aarav Sharma',
+    avatar: '🎒',
+    routeName: 'MMU Main Gate → Central Library & Academic Block',
+    corridorWidthMeters: 100,
+    routeWaypoints: [],
+    originName: 'MMU Main Gate',
+    destinationName: 'Academic Block'
+  };
 
   const isDeviation = riskData && riskData.distanceOffCorridor > 0;
   const statusKey = riskData ? riskData.level.key : 'SAFE';
@@ -28,19 +42,28 @@ window.ParentDashboard = function({
   const handleGenerateLink = async (e) => {
     e.preventDefault();
     if (!linkForm.name) return;
-    const invite = await window.FirebaseService.createDependentInviteToken('parent-user', linkForm);
-    setGeneratedInvite(invite);
+    if (window.FirebaseService && typeof window.FirebaseService.createDependentInviteToken === 'function') {
+      const invite = await window.FirebaseService.createDependentInviteToken('parent-user', linkForm);
+      setGeneratedInvite(invite);
+    } else {
+      setGeneratedInvite({ token: 'LINK-' + Math.floor(100000 + Math.random() * 900000), ...linkForm, dependentName: linkForm.name });
+    }
   };
 
   const handleConfirmLink = async () => {
     if (!generatedInvite) return;
-    const linked = await window.FirebaseService.approveDependentLink('parent-user', {
+    const linkObj = {
       name: generatedInvite.dependentName,
       relation: generatedInvite.relation,
       school: generatedInvite.school
-    });
-    const updated = window.StorageService.addLinkedDependent(linked);
-    setDependents(window.StorageService.getLinkedDependents());
+    };
+    if (window.FirebaseService && typeof window.FirebaseService.approveDependentLink === 'function') {
+      const linked = await window.FirebaseService.approveDependentLink('parent-user', linkObj);
+      if (window.StorageService && typeof window.StorageService.addLinkedDependent === 'function') {
+        window.StorageService.addLinkedDependent(linked);
+        setDependents(window.StorageService.getLinkedDependents());
+      }
+    }
     setShowLinkModal(false);
     setGeneratedInvite(null);
   };
@@ -74,7 +97,7 @@ window.ParentDashboard = function({
               Your Family is Monitored & Safe
             </h1>
             <p style={{ fontSize: '0.86rem', color: '#94A3B8' }}>
-              Real-time geofence tracking along approved school and commute corridors with proactive check-ins.
+              Real-time geofence tracking along approved university and daily commute corridors with proactive check-ins.
             </p>
           </div>
 
@@ -102,7 +125,7 @@ window.ParentDashboard = function({
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <b style={{ color: '#FFFFFF', fontSize: '0.92rem' }}>{dep.name}</b>
                     <span style={{ fontSize: '0.7rem', color: '#10B981', fontWeight: '700' }}>
-                      🔋 {dep.battery || 84}%
+                      🔋 {dep.battery || 88}%
                     </span>
                   </div>
                   <div style={{ fontSize: '0.74rem', color: '#94A3B8' }}>
@@ -123,28 +146,28 @@ window.ParentDashboard = function({
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
               <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10B981', display: 'inline-block' }} />
               <span style={{ fontWeight: '800', color: '#FFFFFF', fontSize: '0.92rem' }}>
-                {activeScenario.travelerName}'s Live Journey: {activeScenario.routeName}
+                {scenario.travelerName}'s Live Journey: {scenario.routeName}
               </span>
             </div>
             <div style={{ fontSize: '0.8rem', color: '#94A3B8' }}>
-              Corridor Buffer: <b style={{ color: '#38BDF8' }}>{activeScenario.corridorWidthMeters}m</b>
+              Corridor Buffer: <b style={{ color: '#38BDF8' }}>{scenario.corridorWidthMeters || 100}m</b>
             </div>
           </div>
 
           <div style={{ flex: 1, position: 'relative', minHeight: '440px' }}>
             <window.InteractiveMap 
               mapId="parent-main-map"
-              routeWaypoints={activeScenario.routeWaypoints}
-              corridorWidthMeters={activeScenario.corridorWidthMeters}
+              routeWaypoints={scenario.routeWaypoints || []}
+              corridorWidthMeters={scenario.corridorWidthMeters || 100}
               currentPos={currentPos}
-              travelerName={activeScenario.travelerName}
-              travelerAvatar={activeScenario.avatar}
+              travelerName={scenario.travelerName}
+              travelerAvatar={scenario.avatar}
               safetyLevel={statusKey}
               isDeviation={isDeviation}
-              originName={activeScenario.originName}
-              destinationName={activeScenario.destinationName}
+              originName={scenario.originName}
+              destinationName={scenario.destinationName}
             />
-            <window.MapLegend corridorWidthMeters={activeScenario.corridorWidthMeters} />
+            <window.MapLegend corridorWidthMeters={scenario.corridorWidthMeters || 100} />
           </div>
         </div>
 
@@ -191,49 +214,55 @@ window.ParentDashboard = function({
         <h3 style={{ fontSize: '1.15rem', fontWeight: '800', color: '#FFFFFF', marginBottom: '1rem' }}>
           Chronological Journey Timeline
         </h3>
-        <window.JourneyTimeline timeline={journeyTimeline} activeScenario={activeScenario} safeBeacon={safeBeacon} />
+        <window.JourneyTimeline timeline={journeyTimeline} activeScenario={scenario} safeBeacon={safeBeacon} />
       </div>
 
       {/* Modal: Link Family Member */}
       {showLinkModal && (
-        <div className="srg-modal-backdrop">
-          <div className="srg-modal-card">
-            <h3 style={{ fontSize: '1.25rem', fontWeight: '800', color: '#172A46', marginBottom: '0.5rem' }}>
+        <div className="srg-modal-backdrop" onClick={() => setShowLinkModal(false)}>
+          <div className="srg-modal-card" onClick={e => e.stopPropagation()}>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: '800', color: '#FFFFFF', marginBottom: '0.5rem' }}>
               Link a Dependent Family Member
             </h3>
-            <p style={{ fontSize: '0.84rem', color: '#64748B', marginBottom: '1.2rem' }}>
-              Generate a single-use, 24-hour cryptographic linking token. Enter this token on your dependent's device to confirm consent.
+            <p style={{ fontSize: '0.84rem', color: '#94A3B8', marginBottom: '1.2rem' }}>
+              Generate a single-use linking token for consent confirmation.
             </p>
 
             {!generatedInvite ? (
               <form onSubmit={handleGenerateLink}>
-                <label>
+                <label style={{ display: 'block', color: '#CBD5E1', fontSize: '0.82rem', marginBottom: '0.6rem' }}>
                   Family Member's Full Name
                   <input
                     type="text"
+                    className="srg-insta-input"
                     value={linkForm.name}
                     onChange={(e) => setLinkForm({ ...linkForm, name: e.target.value })}
                     placeholder="e.g. Aarav Sharma"
+                    style={{ marginTop: '0.25rem' }}
                     required
                   />
                 </label>
-                <label>
+                <label style={{ display: 'block', color: '#CBD5E1', fontSize: '0.82rem', marginBottom: '0.6rem' }}>
                   Relationship
                   <input
                     type="text"
+                    className="srg-insta-input"
                     value={linkForm.relation}
                     onChange={(e) => setLinkForm({ ...linkForm, relation: e.target.value })}
                     placeholder="e.g. Son (15 yrs)"
+                    style={{ marginTop: '0.25rem' }}
                     required
                   />
                 </label>
-                <label>
-                  School / Activity Destination
+                <label style={{ display: 'block', color: '#CBD5E1', fontSize: '0.82rem', marginBottom: '0.6rem' }}>
+                  Campus / School Destination
                   <input
                     type="text"
+                    className="srg-insta-input"
                     value={linkForm.school}
                     onChange={(e) => setLinkForm({ ...linkForm, school: e.target.value })}
-                    placeholder="e.g. Oakwood High School"
+                    placeholder="e.g. MMU Mullana Campus"
+                    style={{ marginTop: '0.25rem' }}
                   />
                 </label>
 
@@ -248,14 +277,14 @@ window.ParentDashboard = function({
               </form>
             ) : (
               <div>
-                <div style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', padding: '1rem', borderRadius: '10px', textAlign: 'center', margin: '1rem 0' }}>
-                  <span style={{ fontSize: '0.74rem', color: '#15803D', fontWeight: '800', display: 'block' }}>
+                <div style={{ background: '#064E3B', border: '1px solid #10B981', padding: '1rem', borderRadius: '10px', textAlign: 'center', margin: '1rem 0' }}>
+                  <span style={{ fontSize: '0.74rem', color: '#6EE7B7', fontWeight: '800', display: 'block' }}>
                     SINGLE-USE EXPIRING LINKING TOKEN
                   </span>
-                  <div style={{ fontSize: '1.5rem', fontWeight: '800', color: '#166534', fontFamily: 'monospace', letterSpacing: '0.1em', margin: '0.4rem 0' }}>
+                  <div style={{ fontSize: '1.5rem', fontWeight: '800', color: '#FFFFFF', fontFamily: 'monospace', letterSpacing: '0.1em', margin: '0.4rem 0' }}>
                     {generatedInvite.token}
                   </div>
-                  <small style={{ color: '#15803D', fontSize: '0.72rem' }}>
+                  <small style={{ color: '#A7F3D0', fontSize: '0.72rem' }}>
                     Valid for 24 hours. Enter this token on {generatedInvite.dependentName}'s mobile companion.
                   </small>
                 </div>

@@ -6,12 +6,12 @@
 
 window.StaffDashboard = function({
   onBackToWorkspace,
-  activeScenario,
+  activeScenario = null,
   scenarios = [],
-  onSelectScenario,
-  riskData,
-  currentPos,
-  journeyState,
+  onSelectScenario = () => {},
+  riskData = null,
+  currentPos = null,
+  journeyState = {},
   alerts = [],
   contacts = [],
   journeyTimeline = [],
@@ -21,17 +21,33 @@ window.StaffDashboard = function({
   const [filterLevel, setFilterLevel] = React.useState('ALL'); // 'ALL' | 'SAFE' | 'CAUTION' | 'HIGH_RISK' | 'EMERGENCY'
   const [ackToast, setAckToast] = React.useState(null);
 
+  const scenario = activeScenario || {
+    travelerName: 'Traveler',
+    avatar: '🛡️',
+    routeName: 'MMU Campus Corridor',
+    corridorWidthMeters: 100,
+    routeWaypoints: [],
+    originName: 'Origin',
+    destinationName: 'Destination'
+  };
+
+  const risk = riskData || {
+    score: 0,
+    level: { key: 'SAFE', label: 'Safe', color: '#10B981' },
+    distanceOffCorridor: 0
+  };
+
   // Sample assigned travelers for the staff member
-  const assignedTravelers = scenarios.map((sc, i) => ({
+  const assignedTravelers = (scenarios && scenarios.length > 0 ? scenarios : [scenario]).map((sc, i) => ({
     id: sc.id,
     name: sc.travelerName,
     role: sc.travelerRole,
     avatar: sc.avatar,
     routeName: sc.routeName,
     corridorWidth: sc.corridorWidthMeters,
-    riskScore: i === 0 ? riskData.score : (i === 1 ? 12 : 68),
-    levelKey: i === 0 ? riskData.level.key : (i === 1 ? 'SAFE' : 'HIGH_RISK'),
-    lastActivity: i === 0 ? (riskData.distanceOffCorridor > 0 ? `${riskData.distanceOffCorridor}m deviation` : 'On route') : 'Safe in corridor',
+    riskScore: i === 0 ? risk.score : (i === 1 ? 12 : 68),
+    levelKey: i === 0 ? risk.level.key : (i === 1 ? 'SAFE' : 'HIGH_RISK'),
+    lastActivity: i === 0 ? (risk.distanceOffCorridor > 0 ? `${risk.distanceOffCorridor}m deviation` : 'On route') : 'Safe in corridor',
     scenario: sc
   }));
 
@@ -68,13 +84,13 @@ window.StaffDashboard = function({
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
             <div style={{ fontSize: '0.74rem', color: '#38BDF8', fontWeight: '800', letterSpacing: '0.08em' }}>
-              FIELD MONITORING ASSIGNMENT
+              MMU CAMPUS FIELD MONITORING ASSIGNMENT
             </div>
             <h1 style={{ fontSize: '1.55rem', fontWeight: '800', color: '#FFFFFF', margin: '0.2rem 0' }}>
               Assigned Travelers & Incident Feed
             </h1>
             <p style={{ fontSize: '0.85rem', color: '#94A3B8' }}>
-              Monitoring active travelers assigned to your operational group.
+              Monitoring active travelers assigned to your operational campus group.
             </p>
           </div>
 
@@ -109,7 +125,7 @@ window.StaffDashboard = function({
 
           <div style={{ display: 'grid', gap: '0.75rem' }}>
             {filteredTravelers.map((t) => {
-              const isSelected = activeScenario && activeScenario.id === t.id;
+              const isSelected = scenario && scenario.id === t.id;
               return (
                 <div
                   key={t.id}
@@ -175,27 +191,27 @@ window.StaffDashboard = function({
           <div className="srg-map-wrapper">
             <div className="srg-map-header">
               <span style={{ fontWeight: '800', color: '#FFFFFF', fontSize: '0.88rem' }}>
-                {activeScenario.travelerName}'s Live Route
+                {scenario.travelerName}'s Live Route
               </span>
             </div>
             <div style={{ flex: 1, position: 'relative', minHeight: '340px' }}>
               <window.InteractiveMap
                 mapId="staff-main-map"
-                routeWaypoints={activeScenario.routeWaypoints}
-                corridorWidthMeters={activeScenario.corridorWidthMeters}
+                routeWaypoints={scenario.routeWaypoints || []}
+                corridorWidthMeters={scenario.corridorWidthMeters || 100}
                 currentPos={currentPos}
-                travelerName={activeScenario.travelerName}
-                travelerAvatar={activeScenario.avatar}
-                safetyLevel={riskData ? riskData.level.key : 'SAFE'}
-                isDeviation={riskData && riskData.distanceOffCorridor > 0}
-                originName={activeScenario.originName}
-                destinationName={activeScenario.destinationName}
+                travelerName={scenario.travelerName}
+                travelerAvatar={scenario.avatar}
+                safetyLevel={risk.level.key || 'SAFE'}
+                isDeviation={risk.distanceOffCorridor > 0}
+                originName={scenario.originName}
+                destinationName={scenario.destinationName}
               />
-              <window.MapLegend corridorWidthMeters={activeScenario.corridorWidthMeters} />
+              <window.MapLegend corridorWidthMeters={scenario.corridorWidthMeters || 100} />
             </div>
           </div>
 
-          <window.RiskGauge riskData={riskData} compact={true} />
+          <window.RiskGauge riskData={risk} compact={true} />
         </div>
       </div>
     </div>

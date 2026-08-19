@@ -1,200 +1,442 @@
 /**
  * SafeRoute Guardian - Portal Stylesheet (v2.0)
- * Split-Panel Authentication, 3-Role Workspace Hub, Parent/Staff Dashboards, and Access Denied Screens.
+ * Minimal Instagram-style authentication, Post-login Onboarding, Test & Demo Modal, and Workspace Hub.
  */
 
-/* Split-Panel Authentication Layout */
-.srg-auth-page {
+/* ========================================================================= */
+/* 1. Minimal Instagram-Style Authentication Layout                          */
+/* ========================================================================= */
+
+.srg-insta-auth-page {
   min-height: 100vh;
-  display: grid;
-  place-items: center;
-  padding: 1.5rem;
-  background: radial-gradient(circle at top right, #1E293B 0%, #0A192F 100%);
-}
-
-.srg-auth-container {
-  display: grid;
-  grid-template-columns: 1.2fr 1fr;
-  max-width: 960px;
-  width: 100%;
-  background: rgba(15, 23, 42, 0.75);
-  backdrop-filter: blur(20px);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-xl);
-  overflow: hidden;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
-}
-
-@media (max-width: 840px) {
-  .srg-auth-container {
-    grid-template-columns: 1fr;
-  }
-  .srg-auth-brand-panel {
-    display: none;
-  }
-}
-
-.srg-auth-brand-panel {
-  padding: 2.5rem;
-  background: linear-gradient(145deg, rgba(37, 99, 235, 0.15) 0%, rgba(15, 23, 42, 0.9) 100%);
-  border-right: 1px solid var(--border-subtle);
   display: flex;
   flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem 1rem;
+  background: radial-gradient(circle at 50% 20%, #111e38 0%, #070e1e 100%);
+  color: #E2E8F0;
+  box-sizing: border-box;
 }
 
-.srg-auth-brand-header {
+.srg-insta-auth-container {
+  width: 100%;
+  max-width: 380px;
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 0.85rem;
 }
 
-.srg-auth-card {
-  padding: 2.5rem;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
-.srg-sim-banner {
-  background: rgba(245, 158, 11, 0.12);
-  border: 1px solid rgba(245, 158, 11, 0.4);
-  color: #FCD34D;
-  padding: 0.5rem 0.8rem;
-  border-radius: 8px;
-  font-size: 0.76rem;
-  margin-bottom: 1.2rem;
+.srg-insta-card {
+  background: #0B1528;
+  border: 1px solid #1E293B;
+  border-radius: 12px;
+  padding: 2.2rem 2.2rem 1.8rem;
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5);
+  box-sizing: border-box;
   text-align: center;
 }
 
-.srg-auth-tabs {
-  display: flex;
-  gap: 0.4rem;
-  background: #0F172A;
-  padding: 0.3rem;
-  border-radius: 10px;
-  border: 1px solid #1E293B;
-  margin-bottom: 1.25rem;
+.srg-insta-brand {
+  margin-bottom: 1.8rem;
 }
 
-.srg-auth-tab {
-  flex: 1;
-  padding: 0.5rem;
-  background: transparent;
-  border: none;
-  border-radius: 8px;
-  color: var(--text-muted);
-  font-weight: 700;
-  font-size: 0.82rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.srg-auth-tab.active {
-  background: var(--color-brand-deep);
-  color: #FFFFFF;
-}
-
-.srg-auth-error {
-  background: rgba(239, 68, 68, 0.15);
-  border: 1px solid rgba(239, 68, 68, 0.4);
-  color: #FCA5A5;
-  padding: 0.6rem 0.8rem;
-  border-radius: 8px;
-  font-size: 0.8rem;
-  margin-bottom: 1rem;
-}
-
-.srg-auth-info {
-  background: rgba(16, 185, 129, 0.15);
-  border: 1px solid rgba(16, 185, 129, 0.4);
-  color: #6EE7B7;
-  padding: 0.6rem 0.8rem;
-  border-radius: 8px;
-  font-size: 0.8rem;
-  margin-bottom: 1rem;
-}
-
-.srg-google-btn {
+.srg-insta-logo-wrap {
+  width: 52px;
+  height: 52px;
+  margin: 0 auto 0.75rem;
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.2) 0%, rgba(56, 189, 248, 0.25) 100%);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.6rem;
-  width: 100%;
-  padding: 0.75rem;
-  background: #FFFFFF;
-  color: #1F2937;
-  border: 1px solid #E5E7EB;
+  box-shadow: 0 4px 14px rgba(56, 189, 248, 0.15);
+}
+
+.srg-insta-logo-icon {
+  font-size: 1.75rem;
+}
+
+.srg-insta-title {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #FFFFFF;
+  letter-spacing: -0.02em;
+  margin: 0 0 0.25rem 0;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.srg-insta-subtitle {
+  font-size: 0.76rem;
+  color: #94A3B8;
+  letter-spacing: 0.04em;
+  margin: 0;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+/* Alert notifications inside form */
+.srg-insta-alert {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.65rem 0.85rem;
   border-radius: 8px;
-  font-size: 0.88rem;
+  font-size: 0.78rem;
+  margin-bottom: 1.2rem;
+  text-align: left;
+  line-height: 1.4;
+}
+
+.srg-insta-alert-error {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #FCA5A5;
+}
+
+.srg-insta-alert-success {
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #6EE7B7;
+}
+
+/* Inputs */
+.srg-insta-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.srg-insta-input-group {
+  position: relative;
+  width: 100%;
+}
+
+.srg-insta-input {
+  width: 100%;
+  padding: 0.75rem 0.85rem;
+  background: #070F1E;
+  border: 1px solid #1E293B;
+  border-radius: 6px;
+  color: #FFFFFF;
+  font-size: 0.84rem;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.srg-insta-input::placeholder {
+  color: #64748B;
+  font-size: 0.8rem;
+}
+
+.srg-insta-input:focus {
+  outline: none;
+  border-color: #38BDF8;
+  background: #091427;
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.15);
+}
+
+.srg-insta-pw-group .srg-insta-input {
+  padding-right: 3.2rem;
+}
+
+.srg-insta-pw-toggle {
+  position: absolute;
+  right: 0.6rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #94A3B8;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0.2rem 0.4rem;
+}
+
+.srg-insta-pw-toggle:hover {
+  color: #FFFFFF;
+}
+
+/* Submit Button */
+.srg-insta-submit-btn {
+  width: 100%;
+  padding: 0.7rem;
+  margin-top: 0.4rem;
+  background: #2563EB;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.86rem;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s ease;
-}
-
-.srg-google-btn:hover {
-  background: #F9FAFB;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.srg-auth-divider {
   display: flex;
   align-items: center;
-  margin: 1.2rem 0;
-  color: var(--text-muted);
-  font-size: 0.74rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  justify-content: center;
+  min-height: 40px;
+  font-family: inherit;
 }
 
-.srg-auth-divider::before,
-.srg-auth-divider::after {
-  content: '';
+.srg-insta-submit-btn:hover:not(:disabled) {
+  background: #1D4ED8;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+}
+
+.srg-insta-submit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.srg-insta-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #FFFFFF;
+  border-radius: 50%;
+  animation: srg-spin 0.6s linear infinite;
+}
+
+@keyframes srg-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Divider */
+.srg-insta-divider {
+  display: flex;
+  align-items: center;
+  margin: 1.1rem 0 0.85rem;
+  width: 100%;
+}
+
+.srg-insta-divider-line {
   flex: 1;
   height: 1px;
   background: #1E293B;
 }
 
-.srg-auth-divider span {
-  padding: 0 0.6rem;
-}
-
-.srg-auth-card label {
-  display: block;
-  font-size: 0.78rem;
+.srg-insta-divider-text {
+  padding: 0 0.85rem;
+  color: #64748B;
+  font-size: 0.72rem;
   font-weight: 700;
-  color: var(--text-secondary);
-  margin-bottom: 0.85rem;
+  letter-spacing: 0.08em;
 }
 
-.srg-auth-card input {
+/* Google OAuth Button */
+.srg-insta-google-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
   width: 100%;
-  padding: 0.65rem 0.85rem;
-  background: #0F172A;
-  border: 1px solid #334155;
+  padding: 0.65rem;
+  background: transparent;
+  color: #E2E8F0;
+  border: 1px solid #1E293B;
   border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.srg-insta-google-btn:hover:not(:disabled) {
+  background: #0E1A30;
+  border-color: #334155;
   color: #FFFFFF;
-  font-size: 0.88rem;
-  margin-top: 0.25rem;
 }
 
-.srg-auth-card input:focus {
-  outline: none;
-  border-color: var(--color-brand);
+/* Forgot Password */
+.srg-insta-forgot-wrap {
+  margin-top: 0.85rem;
 }
 
-.srg-pw-toggle {
-  position: absolute;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
+.srg-insta-link-btn {
   background: none;
   border: none;
-  font-size: 1rem;
+  color: #94A3B8;
+  font-size: 0.75rem;
   cursor: pointer;
-  color: var(--text-muted);
+  transition: color 0.15s ease;
+  font-family: inherit;
 }
 
-/* Landing & Role Selection Grid */
+.srg-insta-link-btn:hover {
+  color: #38BDF8;
+  text-decoration: underline;
+}
+
+/* Secondary Switcher Card */
+.srg-insta-switch-card {
+  background: #0B1528;
+  border: 1px solid #1E293B;
+  border-radius: 10px;
+  padding: 1rem;
+  text-align: center;
+}
+
+.srg-insta-switch-card p {
+  margin: 0;
+  font-size: 0.82rem;
+  color: #94A3B8;
+}
+
+.srg-insta-switch-btn {
+  background: none;
+  border: none;
+  color: #38BDF8;
+  font-weight: 800;
+  font-size: 0.82rem;
+  cursor: pointer;
+  padding: 0 0.2rem;
+  font-family: inherit;
+}
+
+.srg-insta-switch-btn:hover {
+  text-decoration: underline;
+}
+
+.srg-insta-footer {
+  text-align: center;
+  font-size: 0.7rem;
+  color: #475569;
+  margin-top: 0.5rem;
+}
+
+/* ========================================================================= */
+/* 2. Onboarding Modal & Demo Persona Selector                               */
+/* ========================================================================= */
+
+.srg-onboarding-persona-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 0.85rem;
+  margin: 1.2rem 0;
+}
+
+.srg-onboarding-persona-card {
+  background: #070F1E;
+  border: 1.5px solid #1E293B;
+  border-radius: 12px;
+  padding: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.srg-onboarding-persona-card:hover {
+  border-color: #38BDF8;
+  background: #0C1A30;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+.srg-onboarding-persona-card.selected {
+  border-color: #10B981;
+  background: rgba(16, 185, 129, 0.08);
+}
+
+.srg-competition-notice {
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  color: #FCD34D;
+  padding: 0.5rem 0.85rem;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  margin: 1rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* ========================================================================= */
+/* 3. Test & Demo Simulation Modal Styles                                    */
+/* ========================================================================= */
+
+.srg-test-demo-panel {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.75rem;
+  margin: 1.2rem 0;
+}
+
+.srg-sim-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.75rem 0.9rem;
+  background: #0F172A;
+  border: 1px solid #1E293B;
+  border-radius: 10px;
+  color: #FFFFFF;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+  font-family: inherit;
+}
+
+.srg-sim-action-btn:hover {
+  background: #1E293B;
+  border-color: #38BDF8;
+  transform: translateY(-1px);
+}
+
+.srg-sim-action-btn.emergency {
+  border-color: rgba(239, 68, 68, 0.5);
+  background: rgba(239, 68, 68, 0.1);
+  color: #FCA5A5;
+}
+
+.srg-sim-action-btn.emergency:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: #EF4444;
+}
+
+.srg-sim-action-btn.fast {
+  border-color: rgba(245, 158, 11, 0.5);
+  background: rgba(245, 158, 11, 0.1);
+  color: #FCD34D;
+}
+
+.srg-sim-action-btn.reset {
+  border-color: #64748B;
+  color: #CBD5E1;
+}
+
+.srg-test-demo-badge {
+  background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+  color: #000000;
+  font-weight: 900;
+  font-size: 0.72rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.srg-test-demo-badge:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.45);
+}
+
+/* ========================================================================= */
+/* 4. General Workspace & Card Grid Fixes                                    */
+/* ========================================================================= */
+
 .srg-landing-view {
   max-width: 1200px;
   margin: 0 auto;
@@ -232,7 +474,6 @@
   box-shadow: 0 0 25px rgba(56, 189, 248, 0.2);
 }
 
-/* Workspace Features Grid */
 .srg-features-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -255,7 +496,6 @@
   transform: translateY(-2px);
 }
 
-/* Parent Dashboard Specifics */
 .srg-parent-hero-card,
 .srg-staff-hero-card {
   background: rgba(15, 23, 42, 0.75);
@@ -291,7 +531,6 @@
   background: rgba(16, 185, 129, 0.1);
 }
 
-/* Filter Buttons in Staff Dashboard */
 .srg-filter-btn {
   padding: 0.35rem 0.65rem;
   border: none;
@@ -309,7 +548,6 @@
   color: #0F172A;
 }
 
-/* Access Denied Card */
 .srg-access-denied-view {
   min-height: 60vh;
   display: grid;

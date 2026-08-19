@@ -1,6 +1,6 @@
-# SafeRoute Guardian — Vercel Static Deployment Checklist 🛡️
+# SafeRoute Guardian (Reworked-Safety_dec) — Vercel Static Deployment Checklist 🛡️
 
-Follow these exact settings to deploy SafeRoute Guardian as a reliable, production-ready static site on Vercel without Node/Vite build race conditions.
+Follow these exact settings to deploy SafeRoute Guardian (`Reworked-Safety_dec`) as a reliable, production-ready static site on Vercel without Node/Vite build race conditions.
 
 ---
 

@@ -6,11 +6,11 @@
 
 window.UserDashboard = function({
   onBackToWorkspace,
-  activeScenario,
-  riskData,
-  currentPos,
-  journeyState,
-  isCheckinModalOpen,
+  activeScenario = null,
+  riskData = null,
+  currentPos = null,
+  journeyState = {},
+  isCheckinModalOpen = false,
   onResolveCheckin,
   onTriggerSos,
   onTestEmergency,
@@ -25,6 +25,16 @@ window.UserDashboard = function({
   const sosTimerRef = React.useRef(null);
   const startTimeRef = React.useRef(null);
 
+  const scenario = activeScenario || {
+    travelerName: 'Traveler',
+    avatar: '🎒',
+    routeName: 'MMU Campus Corridor',
+    corridorWidthMeters: 100,
+    routeWaypoints: [],
+    originName: 'MMU Main Gate',
+    destinationName: 'Academic Block'
+  };
+
   const isDeviation = riskData && riskData.distanceOffCorridor > 0;
   const statusKey = riskData ? riskData.level.key : 'SAFE';
 
@@ -32,7 +42,9 @@ window.UserDashboard = function({
   const startSosHold = () => {
     setIsHoldingSos(true);
     startTimeRef.current = Date.now();
-    window.AudioService && window.AudioService.playTick();
+    if (window.AudioService && typeof window.AudioService.playTick === 'function') {
+      window.AudioService.playTick();
+    }
 
     sosTimerRef.current = setInterval(() => {
       const elapsed = Date.now() - startTimeRef.current;
@@ -43,7 +55,9 @@ window.UserDashboard = function({
         clearInterval(sosTimerRef.current);
         setIsHoldingSos(false);
         setSosProgress(0);
-        onTriggerSos('MANUAL_SOS_HOLD');
+        if (onTriggerSos) {
+          onTriggerSos('MANUAL_SOS_HOLD');
+        }
       }
     }, 40);
   };
@@ -76,7 +90,7 @@ window.UserDashboard = function({
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
           <span style={{ fontSize: '1.2rem' }}>🧳</span>
           <span style={{ fontWeight: '800', color: '#FFFFFF', fontSize: '0.9rem' }}>
-            {activeScenario.travelerName}'s Companion
+            {scenario.travelerName}'s Companion
           </span>
         </div>
       </div>
@@ -89,7 +103,7 @@ window.UserDashboard = function({
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
               <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10B981', display: 'inline-block' }} />
               <span style={{ fontWeight: '800', color: '#FFFFFF', fontSize: '0.92rem' }}>
-                Live Corridor Tracking: {activeScenario.routeName}
+                Live Corridor Tracking: {scenario.routeName}
               </span>
             </div>
             <div style={{ fontSize: '0.8rem', color: '#94A3B8' }}>
@@ -100,17 +114,17 @@ window.UserDashboard = function({
           <div style={{ flex: 1, position: 'relative', minHeight: '400px' }}>
             <window.InteractiveMap
               mapId="user-main-map"
-              routeWaypoints={activeScenario.routeWaypoints}
-              corridorWidthMeters={activeScenario.corridorWidthMeters}
+              routeWaypoints={scenario.routeWaypoints || []}
+              corridorWidthMeters={scenario.corridorWidthMeters || 100}
               currentPos={currentPos}
-              travelerName={activeScenario.travelerName}
-              travelerAvatar={activeScenario.avatar}
+              travelerName={scenario.travelerName}
+              travelerAvatar={scenario.avatar}
               safetyLevel={statusKey}
               isDeviation={isDeviation}
-              originName={activeScenario.originName}
-              destinationName={activeScenario.destinationName}
+              originName={scenario.originName}
+              destinationName={scenario.destinationName}
             />
-            <window.MapLegend corridorWidthMeters={activeScenario.corridorWidthMeters} />
+            <window.MapLegend corridorWidthMeters={scenario.corridorWidthMeters || 100} />
           </div>
 
           {/* Journey Quick Stats */}
@@ -127,7 +141,7 @@ window.UserDashboard = function({
             </div>
             <div style={{ textAlign: 'center' }}>
               <span style={{ fontSize: '0.7rem', color: '#94A3B8', display: 'block' }}>Corridor Buffer</span>
-              <b style={{ fontSize: '0.92rem', color: '#38BDF8' }}>{activeScenario.corridorWidthMeters}m</b>
+              <b style={{ fontSize: '0.92rem', color: '#38BDF8' }}>{scenario.corridorWidthMeters || 100}m</b>
             </div>
           </div>
         </div>
@@ -160,7 +174,7 @@ window.UserDashboard = function({
               Emergency Panic Protocol
             </h3>
             <p style={{ fontSize: '0.78rem', color: '#94A3B8', marginBottom: '1.2rem' }}>
-              Hold button for 3 seconds or shake phone 3 times to sound audio sirens and dispatch CAD alerts.
+              Hold button for 3 seconds or shake phone 3 times to sound audio sirens and alert MMU campus security.
             </p>
 
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '0.5rem 0' }}>

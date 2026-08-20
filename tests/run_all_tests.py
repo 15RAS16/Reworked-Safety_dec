@@ -17,7 +17,8 @@ def main():
         "tests/riskEngine.test.py",
         "tests/securityRules.test.py",
         "tests/googleMaps.test.py",
-        "tests/test_e2e_verification.py"
+        "tests/test_e2e_verification.py",
+        "tests/competitionReady.test.py"
     ]
 
 

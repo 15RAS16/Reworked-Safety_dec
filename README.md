@@ -105,28 +105,15 @@ $$\text{dist}(P, AB) = \min_{t \in [0, 1]} \| P - (A + t(B - A)) \|$$
 - `0–29`: **Safe** (Emerald) — Smooth progress within designated corridor.
 - `30–59`: **Caution** (Amber) — Minor deviation; gentle in-app route reminder dispatched.
 - `60–79`: **High Risk** (Orange) — Significant drift; "Are you safe?" check-in prompt and admin alert triggered.
-- `80–100`: **Emergency** (Crimson) — Emergency Protocol activated; sirens sound and safety network alerted.
-
----
-
-## 🔒 Security Architecture & Cloud Firestore Rules
-
-- **Zero Client Privilege Escalation**: Role state in React cannot grant unauthorized backend access. All reads and writes are validated by [firestore.rules](file:///firestore.rules).
-- **Consent-Based Family Linking**: Single-use expiring tokens generated on the backend.
-- **Cryptographic Organization Invitations**: Random, single-use, expiring tokens validated via Cloud Functions.
-- **Default-Deny Policy**: All unlisted subcollections and cross-tenant reads are denied by default.
-- **Append-Only Auditing**: Alerts and incident logs cannot be deleted or forged by clients.
-- **Serverless Secrets**: Twilio SMS tokens and 911 CAD credentials reside strictly in [functions/index.js](file:///functions/index.js) via Secret Manager.
-
----
+- `80–100`: **Emergency** (Crimson) — Emergency Protocol activated; sirens sound and
 
 ## 🗺️ Google Maps JavaScript API & Campus Safety Geofencing
 
 SafeRoute Guardian integrates the **Google Maps JavaScript API** as its primary live map engine with geometry-based geofence calculation, centered on **Maharishi Markandeshwar (Deemed to be University), Mullana, Ambala Cantonment, Haryana, India**.
 
-### Map Features:
+### Map Features & Resilient Fallback:
 - **Campus Centered**: Centered on MMU Mullana (`30.2505, 77.0495`) in normal roadmap view (`ROADMAP`) with zoom, fullscreen, and map-type controls enabled.
-- **Campus Safety Geofence**: Realistic campus perimeter polygon drawn via `google.maps.Polygon` with real-time `google.maps.geometry.poly.containsLocation` evaluation.
+- **Campus Safety Geofence**: Realistic campus perimeter polygon drawn with real-time `isPointInsideCampusGeofence` evaluation.
 - **Campus POI Safe Stations**:
   - 🏛️ Main Gate (Gate 1 Security Post)
   - 🎓 Academic Block 3 (Engineering Complex)
@@ -135,15 +122,13 @@ SafeRoute Guardian integrates the **Google Maps JavaScript API** as its primary 
   - 🏥 MM Super Speciality Hospital & 24/7 Trauma Emergency
   - ⚽ MMU Sports Complex & Arena
   - 🚌 MMU Bus Stop & Transit Terminus
-- **Safe Walking Corridors**: Approved route path rendered via `google.maps.Polyline` wrapped in a translucent geofence buffer polygon.
-- **Dynamic Traveler Status Pins**:
-  - 🟢 **Green**: Safe / On Approved Route
-  - 🟡 **Amber**: Minor Deviation / Caution
-  - 🔴 **Red**: High-Risk Deviation / Active SOS Panic
-  - 🔵 **Blue**: Guardian / Organization Monitoring Point
+- **Safe Walking Corridors**: Approved route path rendered via polyline wrapped in a translucent geofence buffer polygon.
+- **Dynamic Traveler Status Pins**: Safe (Emerald 🟢), Caution (Amber 🟡), and SOS Panic (Red 🔴).
 - **Resilient Fallback Handling**:
   - Displays *"Loading MMU Mullana Campus Safety Map…"* during SDK initialization.
-  - If the API key is missing, invalid, domain-restricted, or offline, renders an in-page safety card: *"Map is temporarily unavailable. Safety controls and demo mode remain available."* or falls back to OpenStreetMap without crashing dashboards.
+  - **Automatic Fallback Map**: If `GOOGLE_MAPS_API_KEY` is invalid, restricted, domain-blocked, or the client is offline, the map **automatically switches to Leaflet/OpenStreetMap** within 350ms.
+  - **Demo Map Mode Badge**: Renders a polished orange badge overlay stating **"Demo Map Mode"** when OpenStreetMap fallback is active.
+  - **Reset Demo Map**: Presenters can tap **"Reset Demo Map"** to quickly restore default safe coordinates.
   - Zero dual-map container collisions; all instances, markers, and listeners are cleanly unmounted.
 
 ### 🔑 Google Maps API Key Security & Restriction Rules:
@@ -154,18 +139,7 @@ SafeRoute Guardian integrates the **Google Maps JavaScript API** as its primary 
 >    - Variable Name: `VITE_GOOGLE_MAPS_API_KEY` (or `GOOGLE_MAPS_API_KEY`)
 > 3. **Google Cloud Console Restrictions (Mandatory)**:
 >    - Go to **Google Cloud Console → APIs & Services → Credentials**.
->    - Select your Maps API key and configure **Application restrictions**:
->      - Choose **HTTP referrers (web sites)**.
->      - Add development authorized URLs:
->        - `http://localhost:*/*`
->        - `http://127.0.0.1:*/*`
->      - Add your exact Vercel production deployment domain:
->        - `https://your-project.vercel.app/*`
->        - `https://*.vercel.app/*` (if using preview branches)
->    - Configure **API restrictions**:
->      - Choose **Restrict key**.
->      - Select **Maps JavaScript API** (and Places API if utilized).
-> 4. **Do Not Use Unrestricted Keys**: Unrestricted keys will be flagged and could be subject to unauthorized quota consumption.
+>    - Select your Maps API key and configure **Application restrictions** for HTTP referrers.
 
 ---
 
@@ -184,22 +158,12 @@ SafeRoute Guardian is fully configured for zero-friction static deployment on **
    - **Install Command**: Leave **empty / disabled**.
 4. Click **Deploy**.
 
-### Safe `vercel.json` Static Header Configuration:
-The project includes a streamlined [vercel.json](file:///vercel.json) that sets security headers (`X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy`), 3600-second caching for `/js` and `/css` assets, and **no catch-all rewrite rules** to ensure all script and style requests return their actual file content rather than `index.html`.
-
-### Post-Deployment Troubleshooting & Verification:
-- **Hard Refresh**: After deploying or redeploying, perform a hard refresh using <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>R</kbd> (or <kbd>Cmd</kbd> + <kbd>Shift</kbd> + <kbd>R</kbd> on macOS) to clear cached HTML/scripts.
-- **Inspecting Browser Console**: Open DevTools by pressing <kbd>F12</kbd> (or right-click → **Inspect** → **Console** tab).
-  - Verify that scripts load cleanly with `200 OK` status and `Content-Type: application/javascript`.
-  - Confirm there are no `SyntaxError: Unexpected token '<'` errors (which only happen when a rewrite rule returns HTML for script files).
-  - Verify `[SafeRoute Guardian] Application successfully mounted.` is logged.
-
-### Deterministic Startup Coordinator (`bootstrap.js`):
-The platform uses [js/bootstrap.js](file:///js/bootstrap.js) as an application startup coordinator. It validates all global singletons (`window.React`, `window.ReactDOM`, `window.App`, `window.SRG_DATA`, `window.StorageService`, `window.RiskEngine`, `window.FirebaseService`, `window.ConfigService`, `window.AudioService`, `window.MotionService`) before mounting React. If an unexpected network delay or dependency error occurs, it renders a branded diagnostic recovery screen with diagnostic details and a 1-click reload button instead of leaving the loading screen permanently.
-
 ---
 
 ## 🛡️ Authentication & Guided Onboarding Workflow
+
+### Email/Password-Only Authentication (Google OAuth Removed)
+To protect privacy and ensure smooth offline/local presentation setup, Google OAuth has been completely removed from the login screen. Login is securely governed by email and password registration, authentication, inline validation, and custom password resets.
 
 ### Returning User Fast-Path
 When an authenticated user returns to SafeRoute Guardian:
@@ -207,18 +171,37 @@ When an authenticated user returns to SafeRoute Guardian:
 - If `onboardingComplete === true`, the user is **immediately and automatically redirected** to their authorized dashboard (`tourist` -> Tourist Dashboard, `parent` -> Parent Dashboard, `organization:admin` -> Admin Command Center, `organization:staff` -> Staff Dashboard).
 - No onboarding screens or manual role selection dialogs are shown to returning users.
 
-### First-Time User 4-Step Onboarding
-1. **Account Login**: Sign in via Google OAuth or Email/Password.
-2. **Select Mode**: Exactly 3 large mode cards:
-   - 🧳 **Tourist**: Personal travel safety, AI route scores, SOS panic, and local help.
-   - 👨‍👩‍👧 **Parent / Guardian**: Monitor and protect children, elderly family members, or dependents.
-   - 🏢 **Organization**: Manage travel safety for schools, enterprises, tour groups, or institutions.
+### First-Time User Onboarding
+1. **Account Login**: Sign in via Email/Password (runs fully in isolated local storage Demo Mode if Firebase configuration is not present).
+2. **Select Mode**: Choose 🧳 **Tourist**, 👨‍👩‍👧 **Parent / Guardian**, or 🏢 **Organization**.
 3. **Choose Access Type**:
    - **Tourist**: Self Use (👤).
    - **Parent**: Self Use / Guardian (👨‍👩‍👧).
-   - **Organization**: Organization Administrator (👑) or Organization User / Staff (🛡️).
-4. **Profile & Verification**:
-   - Setup emergency contacts, link dependents, create organizations, or verify official invitation tokens.
+   - **Organization**: Admin (👑) or Staff (🛡️).
+4. **Profile & Verification**: Set up contacts, dependents, or organizations.
+
+---
+
+## ⚡ Two-Minute Competition Demo Flow
+
+Use this flow to showcase SafeRoute Guardian to judges during live demos:
+
+1. **Clean Login Screen (30 seconds)**:
+   - Navigate to the app. Point out the clean Instagram-style login page.
+   - Note the complete removal of Google sign-in to protect student metadata.
+   - Register or sign in with email/password (e.g. `judge@mmu.edu` / `mmu123`).
+2. **First-Time Guided Onboarding (30 seconds)**:
+   - Complete the onboarding as an **Organization Administrator** (👑).
+   - Once completed, point out the **System Status** dashboard showing map status (OpenStreetMap Fallback active with badge) and Firebase mode (Competition Demo Mode active).
+3. **Geofence Simulation & AI Risk Scoring (40 seconds)**:
+   - Go to the **Live Fleet Monitor** tab. Open the **Demo Simulation Suite**.
+   - Click **Safe on Route** 🟢: Marker centers on MMU campus; risk is 0.
+   - Click **Minor Deviation** 🟡: Marker drifts 120m off path; risk rises to ~40; status goes yellow.
+   - Click **High Risk Drift** 🟠: Marker drifts 450m; alert sounds; risk rises to 68; warning modal pops up asking "Are you safe?" with a countdown.
+4. **Emergency SOS Verification (20 seconds)**:
+   - Click **SOS Panic** 🚨 or click the red SOS button.
+   - Full screen animated warning sirens overlay; GPS coordinates are sent to security dispatch.
+   - Tap "Cancel SOS" and verify confirmation logs are captured in the chronological journey timeline.
 
 ---
 
@@ -229,12 +212,6 @@ SafeRoute Guardian includes an automated test suite verifying both geospatial ca
 ```powershell
 python tests/run_all_tests.py
 ```
-
-### Test Coverage:
-1. **Geospatial Point-to-Segment Test**: Verifies midpoint calculation on 1.1 km long segments without false deviation alerts.
-2. **Lateral Offset Precision Test**: Verifies lateral offset measurement accuracy (~140m).
-3. **Multi-Segment Projection Test**: Verifies orthogonal distance against multi-waypoint routes.
-4. **Security Rules Verification**: Tests default-deny, self-profile reads, alert immutability, audit append-only rules, and organization isolation.
 
 ---
 

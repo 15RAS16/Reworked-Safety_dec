@@ -706,6 +706,22 @@ window.AdminDashboard = function({
         </div>
       )}
 
+      {/* Tab 9: System Status Diagnostic Panel */}
+      {activeTab === 'system-status' && (
+        <div style={{ background: 'var(--bg-card-dark)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-lg)', padding: '1.5rem' }}>
+          <h3 style={{ fontSize: '1.25rem', fontWeight: '800', color: '#FFFFFF', marginBottom: '1rem' }}>
+            System Diagnostic & Configuration Status
+          </h3>
+          <SystemStatusPanel
+            scenarios={scenarios}
+            alerts={alerts}
+            contacts={contacts}
+            journeyTimeline={journeyTimeline}
+            localHelpRequests={localHelpRequests}
+          />
+        </div>
+      )}
+
       {/* Modal: Invite Member */}
       {showMemberModal && (
         <div className="srg-modal-backdrop">

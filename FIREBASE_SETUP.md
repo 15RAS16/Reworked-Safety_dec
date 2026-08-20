@@ -7,7 +7,7 @@ This guide provides step-by-step instructions to configure **Firebase Authentica
 ## 📋 Overview of Firebase Architecture
 
 SafeRoute Guardian uses Firebase for:
-1. **Authentication**: Sign in with Google (OAuth), Email/Password registration, Email/Password sign-in, and Password Reset.
+1. **Authentication**: Email/Password registration, Email/Password sign-in, and Password Reset. (Google OAuth was removed to protect user metadata during competition demo testing).
 2. **Cloud Firestore**: Multi-tenant data store separating user profiles, organizations, linked dependents, routes, alerts, and live journey telemetry.
 3. **Security Rules (`firestore.rules`)**: Role-Based Access Control (RBAC) ensuring Tourists, Parents, and Organizations can only read and write data they own or are explicitly authorized to view.
 
@@ -27,14 +27,11 @@ SafeRoute Guardian uses Firebase for:
 1. In the Firebase Console sidebar, select **Build → Authentication**.
 2. Click **Get Started**.
 3. Under the **Sign-in method** tab:
-   - **Google**:
-     - Click **Google** → Toggle **Enable**.
-     - Set the project public-facing name to `SafeRoute Guardian`.
-     - Select a project support email and click **Save**.
    - **Email/Password**:
      - Click **Email/Password** → Toggle **Enable**.
      - Keep "Email link (passwordless sign-in)" disabled unless needed.
      - Click **Save**.
+   - Note: Google Sign-in is not required.
 4. Under the **Authorized domains** tab:
    - Verify `localhost` is present for local development.
    - Add your production hosting domains (e.g., `saferoute-guardian.web.app`, `yourdomain.com`).
@@ -95,7 +92,7 @@ Deploy the included `firestore.rules` file to enforce role-based access control 
    ```
 
 > [!NOTE]
-> If `.env.local` is omitted, SafeRoute Guardian will automatically run in secure **Simulated Demo Mode**, allowing you to test all roles and features without throwing runtime errors.
+> If `.env.local` is omitted, SafeRoute Guardian will automatically run in secure **Competition Demo Mode** (fully offline), allowing you to test all roles, simulation tools, maps, and features without configuring external databases.
 
 ---
 

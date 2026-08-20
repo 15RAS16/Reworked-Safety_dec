@@ -13,7 +13,7 @@ Validates:
 import os
 import json
 
-ROOT_DIR = r"c:\Users\INTEL\OneDrive\Desktop\DEV\Reworked-Safety_dec"
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 def test_file_exists(rel_path):
     full_path = os.path.join(ROOT_DIR, rel_path)

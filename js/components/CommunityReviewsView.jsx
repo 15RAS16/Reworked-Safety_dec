@@ -19,6 +19,8 @@ window.CommunityReviewsView = function({
   const [authorName, setAuthorName] = React.useState('');
   const [reviewText, setReviewText] = React.useState('');
   const [selectedTags, setSelectedTags] = React.useState(['Safe for Solo Travel', 'Well-lit']);
+  const [errorMessage, setErrorMessage] = React.useState('');
+
 
   const AVAILABLE_TAGS = [
     'Well-lit',
@@ -61,9 +63,10 @@ window.CommunityReviewsView = function({
   const handleSubmitReview = (e) => {
     e.preventDefault();
     if (!reviewText.trim() || !locationText.trim()) {
-      alert('Please enter a location and your safety review text.');
+      setErrorMessage('Please enter a location and your safety review text.');
       return;
     }
+
 
     const newRev = {
       author: authorName.trim() || 'Anonymous Traveler',
@@ -84,6 +87,7 @@ window.CommunityReviewsView = function({
     setReviewText('');
     setAuthorName('');
     setSelectedTags(['Safe for Solo Travel', 'Well-lit']);
+    setErrorMessage('');
 
     setSubmissionSuccessToast('Thank you! Your safety review has been submitted to the community network.');
     setTimeout(() => setSubmissionSuccessToast(null), 4000);
@@ -99,7 +103,7 @@ window.CommunityReviewsView = function({
         </button>
 
         <div style={{ display: 'flex', gap: '0.75rem' }}>
-          <button className="srg-btn srg-btn-primary srg-btn-sm" onClick={() => setShowSubmitModal(true)}>
+          <button className="srg-btn srg-btn-primary srg-btn-sm" onClick={() => { setErrorMessage(''); setShowSubmitModal(true); }}>
             + Submit Safety Review
           </button>
           <button className="srg-btn srg-btn-outline srg-btn-sm" onClick={onOpenExploreSafely}>
@@ -107,6 +111,7 @@ window.CommunityReviewsView = function({
           </button>
         </div>
       </div>
+
 
       {/* Hero Title */}
       <div style={{ marginBottom: '1.5rem' }}>
@@ -222,6 +227,14 @@ window.CommunityReviewsView = function({
             <p style={{ fontSize: '0.82rem', color: '#94A3B8', marginBottom: '1.25rem' }}>
               Help other travelers understand lighting, network availability, and safety along this route.
             </p>
+
+            {errorMessage && (
+              <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', padding: '0.65rem 0.85rem', borderRadius: '8px', color: '#991B1B', fontSize: '0.82rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <span>⚠️</span>
+                <span>{errorMessage}</span>
+              </div>
+            )}
+
 
             <form onSubmit={handleSubmitReview} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>

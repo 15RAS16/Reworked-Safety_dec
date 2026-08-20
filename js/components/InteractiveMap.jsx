@@ -27,6 +27,21 @@ window.InteractiveMap = function({
   const hasKey = window.ConfigService && window.ConfigService.hasMapTilerKey && window.ConfigService.hasMapTilerKey();
   const [activeEngine, setActiveEngine] = React.useState(hasKey ? 'maptiler' : 'leaflet');
 
+  // Vercel supplies public browser configuration through this endpoint. If it
+  // is unavailable (local/static demo), the OpenStreetMap fallback remains active.
+  React.useEffect(() => {
+    let cancelled = false;
+    fetch('/api/runtime-config', { cache: 'no-store' })
+      .then(response => response.ok ? response.json() : null)
+      .then(config => {
+        if (cancelled || !config || !config.mapTilerApiKey || !window.ConfigService) return;
+        const key = window.ConfigService.setMapTilerApiKey && window.ConfigService.setMapTilerApiKey(config.mapTilerApiKey);
+        if (key) setActiveEngine('maptiler');
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
+
   // If active engine is MapTiler, render MapTilerCampusMap with fallback handler
   if (activeEngine === 'maptiler' && window.MapTilerCampusMap) {
     return (
@@ -197,6 +212,10 @@ function LeafletMarinaBayFallback({
       leafletMapRef.current = map;
       setMapLoadError(false);
 
+      // Leaflet measures its container at construction time. The parent card
+      // can finish sizing a moment later, so remeasure once before rendering.
+      requestAnimationFrame(() => map.invalidateSize());
+
       // Draw static showcase POIs immediately
       layersRef.current.contextMarkers = campusPOIs.map(item =>
         window.L.marker(item.point, {
@@ -353,8 +372,8 @@ function LeafletMarinaBayFallback({
   const safetyText = safetyLevel === 'EMERGENCY' ? 'SOS Active' : (isDeviation || safetyLevel === 'HIGH_RISK') ? 'Outside Safe Corridor' : 'Safe — Inside Geofence';
 
   return (
-    <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-      <div id={mapId} ref={mapContainerRef} className="srg-map-container" />
+    <div style={{ position: 'relative', width: '100%', height: '100%', minHeight: isCompact ? '280px' : '400px' }}>
+      <div id={mapId} ref={mapContainerRef} className="srg-map-container" style={{ width: '100%', height: '100%', minHeight: isCompact ? '280px' : '400px' }} />
 
       {/* Marina Bay Geofence Title Badge — top left */}
       <div style={{

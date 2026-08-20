@@ -39,7 +39,7 @@ window.ConfigService = (function() {
   // MapTiler API Key (read from VITE_MAPTILER_API_KEY or MAPTILER_API_KEY)
   const rawMapTilerKey = env.VITE_MAPTILER_API_KEY || env.MAPTILER_API_KEY ||
     (typeof window !== 'undefined' && (window.VITE_MAPTILER_API_KEY || window.MAPTILER_API_KEY)) || '';
-  const mapTilerApiKey = isPlaceholder(rawMapTilerKey) ? '' : rawMapTilerKey.trim();
+  let mapTilerApiKey = isPlaceholder(rawMapTilerKey) ? '' : rawMapTilerKey.trim();
 
   // Demo mode is explicitly controlled by build-time variable VITE_ENABLE_DEMO_MODE or default true for development evaluation
   const enableDemoMode = env.VITE_ENABLE_DEMO_MODE === 'true' || env.enableDemoMode === true || env.VITE_ENABLE_DEMO_MODE === undefined;
@@ -69,6 +69,11 @@ window.ConfigService = (function() {
     },
 
     getMapTilerApiKey: function() {
+      return mapTilerApiKey;
+    },
+
+    setMapTilerApiKey: function(key) {
+      mapTilerApiKey = isPlaceholder(key) ? '' : key.trim();
       return mapTilerApiKey;
     },
 

@@ -103,7 +103,7 @@ function LeafletCampusFallback({
     contextMarkers: []
   });
 
-  const defaultCampusCenter = (window.SRG_DATA && window.SRG_DATA.campus && window.SRG_DATA.campus.centerCoords) || [30.2505, 77.0495];
+  const defaultCampusCenter = (window.SRG_DATA && window.SRG_DATA.campus && window.SRG_DATA.campus.centerCoords) || [28.6129, 77.2295];
   const campusBoundary = (window.SRG_DATA && window.SRG_DATA.campus && window.SRG_DATA.campus.boundaryPolygon) || [
     [30.2458, 77.0445],
     [30.2458, 77.0550],
@@ -115,13 +115,12 @@ function LeafletCampusFallback({
 
   // Fixed campus POIs always displayed regardless of traveler position
   const campusPOIs = [
-    { point: [30.2530, 77.0535], icon: '🏥', label: 'MM Hospital Emergency Center', category: '24/7 Medical' },
-    { point: [30.2472, 77.0468], icon: '🏛️', label: 'MMU Main Gate Security Post', category: 'Campus Security' },
-    { point: [30.2495, 77.0492], icon: '📚', label: 'Central Library Helpdesk', category: 'Student Support' },
-    { point: [30.2468, 77.0460], icon: '🚌', label: 'Campus Bus Stop & Transit Hub', category: 'Transport' },
-    { point: [30.2520, 77.0450], icon: '🏢', label: 'Hostels Complex', category: 'Residential' },
-    { point: [30.2505, 77.0505], icon: '🎓', label: 'Academic Block 3 (Engineering)', category: 'Academic Zone' },
-    { point: [30.2540, 77.0475], icon: '⚽', label: 'MMU Sports Complex', category: 'Recreation' }
+    { point: [28.6129, 77.2295], icon: '🛡️', label: 'India Gate Safety Point', category: 'Showcase Start Point' },
+    { point: [28.6107, 77.2324], icon: '📍', label: 'National War Memorial', category: 'Verified Landmark' },
+    { point: [28.6145, 77.2290], icon: '🆘', label: 'Kartavya Path Help Point', category: 'Safety Assistance' },
+    { point: [28.6139, 77.2352], icon: '🏟️', label: 'National Stadium', category: 'Public Landmark' },
+    { point: [28.6212, 77.2255], icon: '🏛️', label: 'Patiala House Court', category: 'Public Landmark' },
+    { point: [28.6180, 77.2427], icon: '🚇', label: 'Pragati Maidan', category: 'Transit Landmark' }
   ];
 
   const getMarkerColor = () => {
@@ -370,7 +369,7 @@ function LeafletCampusFallback({
         boxShadow: '0 4px 12px rgba(0,0,0,0.3)', pointerEvents: 'none'
       }}>
         <span>🏛️</span>
-        <span>MMU Mullana Campus Safety Geofence</span>
+        <span>{(window.SRG_DATA && window.SRG_DATA.campus && window.SRG_DATA.campus.geofenceLabel) || 'Safety Geofence — Demo Data'}</span>
       </div>
 
       {/* DEMO MAP MODE badge — top right (polished, competition-visible) */}

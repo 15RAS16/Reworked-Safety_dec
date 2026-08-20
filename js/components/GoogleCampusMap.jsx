@@ -44,7 +44,8 @@ window.GoogleCampusMap = function({
   const [isInsideGeofence, setIsInsideGeofence] = React.useState(true);
 
   // MMU Mullana Campus Metadata
-  const defaultCampusCenter = { lat: 30.2505, lng: 77.0495 };
+  const configuredCenter = (window.SRG_DATA && window.SRG_DATA.campus && window.SRG_DATA.campus.centerCoords) || [28.6129, 77.2295];
+  const defaultCampusCenter = { lat: configuredCenter[0], lng: configuredCenter[1] };
   const campusBoundaryCoords = (window.SRG_DATA && window.SRG_DATA.campus && window.SRG_DATA.campus.boundaryPolygon) || [
     [30.2458, 77.0445],
     [30.2458, 77.0550],
@@ -56,13 +57,12 @@ window.GoogleCampusMap = function({
 
   // Campus Key POI Points
   const campusPOIs = [
-    { name: 'MMU Main Gate (Gate 1)', coords: { lat: 30.2472, lng: 77.0468 }, icon: '🏛️', category: 'Campus Security & Entry' },
-    { name: 'Academic Block 3 (Engineering)', coords: { lat: 30.2505, lng: 77.0505 }, icon: '🎓', category: 'Academic Zone' },
-    { name: 'Central Library & Help Kiosk', coords: { lat: 30.2495, lng: 77.0492 }, icon: '📚', category: 'Library & Student Desk' },
-    { name: 'Hostels Complex (Girls & Boys)', coords: { lat: 30.2520, lng: 77.0450 }, icon: '🏢', category: 'Residential Campus' },
-    { name: 'MM Super Speciality Hospital', coords: { lat: 30.2530, lng: 77.0535 }, icon: '🏥', category: '24/7 Medical & Trauma' },
-    { name: 'MMU Sports Complex & Arena', coords: { lat: 30.2540, lng: 77.0475 }, icon: '⚽', category: 'Sports & Recreation' },
-    { name: 'MMU Bus Stop & Transit Point', coords: { lat: 30.2468, lng: 77.0460 }, icon: '🚌', category: 'Transit Hub' }
+    { name: 'India Gate Safety Point', coords: { lat: 28.6129, lng: 77.2295 }, icon: '🛡️', category: 'Showcase Start Point' },
+    { name: 'National War Memorial', coords: { lat: 28.6107, lng: 77.2324 }, icon: '📍', category: 'Verified Landmark' },
+    { name: 'Kartavya Path Help Point', coords: { lat: 28.6145, lng: 77.2290 }, icon: '🆘', category: 'Safety Assistance' },
+    { name: 'National Stadium', coords: { lat: 28.6139, lng: 77.2352 }, icon: '🏟️', category: 'Public Landmark' },
+    { name: 'Patiala House Court', coords: { lat: 28.6212, lng: 77.2255 }, icon: '🏛️', category: 'Public Landmark' },
+    { name: 'Pragati Maidan', coords: { lat: 28.6180, lng: 77.2427 }, icon: '🚇', category: 'Transit Landmark' }
   ];
 
   // Dynamic Marker Color mapping
@@ -580,7 +580,7 @@ window.GoogleCampusMap = function({
         pointerEvents: 'none'
       }}>
         <span>🏛️</span>
-        <span>MMU Mullana Campus Safety Geofence — Demo / Simulated Data</span>
+        <span>{(window.SRG_DATA && window.SRG_DATA.campus && window.SRG_DATA.campus.geofenceLabel) || 'Safety Geofence — Demo Data'}</span>
       </div>
 
       {/* Top Right Geofence & Status Badge */}

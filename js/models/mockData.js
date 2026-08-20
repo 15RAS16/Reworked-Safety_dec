@@ -1,25 +1,24 @@
 /**
  * SafeRoute Guardian - Mock Data, 3-Role Architecture & Preset Scenarios
  * Defines the 3 Top-Level Roles: Tourist, Parent/Guardian, and Organization (with Staff & Admin tiers).
- * Centered on Maharishi Markandeshwar (Deemed to be University), Mullana, Ambala Cantonment, Haryana, India.
+ * Centered on the India Gate and Kartavya Path public showcase zone, New Delhi, India.
  * Contains verified routes, campus geofences, waypoints, emergency contacts, reviews, and local helpers.
  */
 
 window.SRG_DATA = {
   // Campus Metadata & Default Geofence Center
   campus: {
-    name: 'Maharishi Markandeshwar (Deemed to be University)',
-    shortName: 'MMU Mullana',
-    location: 'Mullana, Ambala Cantonment, Haryana 133207, India',
-    centerCoords: [30.2505, 77.0495],
-    geofenceLabel: 'MMU Mullana Campus Safety Geofence — Demo / Simulated Data',
+    name: 'India Gate Safety Showcase Zone',
+    shortName: 'India Gate, New Delhi',
+    location: 'India Gate and Kartavya Path, New Delhi 110001, India',
+    centerCoords: [28.6129, 77.2295],
+    geofenceLabel: 'India Gate Safety Geofence — Competition Demo Data',
     boundaryPolygon: [
-      [30.2458, 77.0445],
-      [30.2458, 77.0550],
-      [30.2558, 77.0560],
-      [30.2568, 77.0482],
-      [30.2538, 77.0438],
-      [30.2458, 77.0445]
+      [28.6088, 77.2250],
+      [28.6088, 77.2345],
+      [28.6170, 77.2345],
+      [28.6170, 77.2250],
+      [28.6088, 77.2250]
     ]
   },
 
@@ -190,37 +189,37 @@ window.SRG_DATA = {
       id: 'student-campus-commute',
       name: 'Campus Commute (Aarav Sharma)',
       travelerName: 'Aarav Sharma',
-      travelerRole: 'Engineering Student (MMU Mullana)',
+      travelerRole: 'Student Visitor (India Gate Showcase)',
       avatar: '🎒',
       guardianName: 'Priya Sharma (Parent)',
       guardianPhone: '+91 98765 43210',
-      routeName: 'MMU Main Gate → Central Library & Academic Block',
-      originName: 'MMU Main Gate (Ambala Road)',
-      destinationName: 'Engineering Academic Block 3',
-      originCoords: [30.2472, 77.0468],
-      destinationCoords: [30.2505, 77.0505],
+      routeName: 'India Gate → National War Memorial',
+      originName: 'India Gate East Entrance',
+      destinationName: 'National War Memorial',
+      originCoords: [28.6129, 77.2295],
+      destinationCoords: [28.6107, 77.2324],
       corridorWidthMeters: 100,
       estimatedDurationMinutes: 14,
       isNightTime: false,
       escalationTimeoutMinutes: 15,
       routeWaypoints: [
-        [30.2472, 77.0468], // MMU Main Gate Entrance
-        [30.2485, 77.0478], // Administrative Complex Boulevard
-        [30.2495, 77.0492], // Central Library Junction
-        [30.2505, 77.0505]  // Engineering Block 3
+        [28.6129, 77.2295], // India Gate
+        [28.6123, 77.2304], // Kartavya Path walking corridor
+        [28.6115, 77.2314], // C-Hexagon approach
+        [28.6107, 77.2324]  // National War Memorial
       ],
       saferRouteWaypoints: [
-        [30.2472, 77.0468],
-        [30.2482, 77.0482],
-        [30.2498, 77.0498],
-        [30.2505, 77.0505]
+        [28.6129, 77.2295],
+        [28.6127, 77.2307],
+        [28.6117, 77.2318],
+        [28.6107, 77.2324]
       ],
       demoWaypoints: {
-        safe: [30.2485, 77.0478],
-        minorDeviation: [30.2492, 77.0460],
-        severeDeviation: [30.2520, 77.0425],
-        returning: [30.2490, 77.0485],
-        destination: [30.2505, 77.0505]
+        safe: [28.6123, 77.2304],
+        minorDeviation: [28.6135, 77.2280],
+        severeDeviation: [28.6180, 77.2240],
+        returning: [28.6119, 77.2310],
+        destination: [28.6107, 77.2324]
       },
       contacts: [
         { id: 'c1', name: 'Priya Sharma', relation: 'Parent / Mother', phone: '+91 98765 43210', email: 'priya.sharma@example.in', notifySms: true, notifyCall: true },
@@ -229,39 +228,39 @@ window.SRG_DATA = {
     },
     {
       id: 'tourist-visitor-walk',
-      name: 'MMU Campus Visitor Walk (Elena Rostova)',
+      name: 'India Gate Visitor Walk (Elena Rostova)',
       travelerName: 'Elena Rostova',
       travelerRole: 'International Academic Visitor',
       avatar: '🧭',
       guardianName: 'Dr. Kabir Roy (Host Liaison)',
       guardianPhone: '+91 98123 45678',
       routeName: 'University Guest House → Botanical Garden & Sports Pavilion',
-      originName: 'University Guest House',
-      destinationName: 'MMU Sports Pavilion & Grounds',
-      originCoords: [30.2480, 77.0515],
-      destinationCoords: [30.2540, 77.0475],
+      originName: 'National Stadium Gate',
+      destinationName: 'India Gate',
+      originCoords: [28.6139, 77.2352],
+      destinationCoords: [28.6129, 77.2295],
       corridorWidthMeters: 120,
       estimatedDurationMinutes: 20,
       isNightTime: false,
       escalationTimeoutMinutes: 15,
       routeWaypoints: [
-        [30.2480, 77.0515], // University Guest House
-        [30.2495, 77.0510], // Central Library Corridor
-        [30.2515, 77.0495], // Student Activity Center
-        [30.2540, 77.0475]  // Sports Pavilion & Athletic Track
+        [28.6139, 77.2352],
+        [28.6134, 77.2335],
+        [28.6130, 77.2315],
+        [28.6129, 77.2295]
       ],
       saferRouteWaypoints: [
-        [30.2480, 77.0515],
-        [30.2500, 77.0508],
-        [30.2525, 77.0488],
-        [30.2540, 77.0475]
+        [28.6139, 77.2352],
+        [28.6133, 77.2338],
+        [28.6129, 77.2319],
+        [28.6129, 77.2295]
       ],
       demoWaypoints: {
-        safe: [30.2495, 77.0510],
-        minorDeviation: [30.2505, 77.0530],
-        severeDeviation: [30.2545, 77.0555],
-        returning: [30.2510, 77.0500],
-        destination: [30.2540, 77.0475]
+        safe: [28.6134, 77.2335],
+        minorDeviation: [28.6150, 77.2333],
+        severeDeviation: [28.6165, 77.2342],
+        returning: [28.6131, 77.2320],
+        destination: [28.6129, 77.2295]
       },
       contacts: [
         { id: 'c3', name: 'Dr. Kabir Roy', relation: 'Faculty Host Liaison', phone: '+91 98123 45678', email: 'kroy@mmumullana.org', notifySms: true, notifyCall: true },
@@ -279,30 +278,30 @@ window.SRG_DATA = {
       routeName: 'MM Super Speciality Hospital → Doctors Residential Enclave',
       originName: 'MM Super Speciality Hospital Emergency',
       destinationName: 'Doctors Residential Enclave (Block B)',
-      originCoords: [30.2530, 77.0535],
-      destinationCoords: [30.2555, 77.0505],
+      originCoords: [28.6212, 77.2255],
+      destinationCoords: [28.6129, 77.2295],
       corridorWidthMeters: 80,
       estimatedDurationMinutes: 12,
       isNightTime: true,
       escalationTimeoutMinutes: 10,
       routeWaypoints: [
-        [30.2530, 77.0535], // MM Hospital Emergency Portico
-        [30.2538, 77.0522], // Medical College Well-Lit Walkway
-        [30.2548, 77.0512], // Faculty Enclave Security Barrier
-        [30.2555, 77.0505]  // Residential Block B
+        [28.6212, 77.2255],
+        [28.6187, 77.2268],
+        [28.6157, 77.2281],
+        [28.6129, 77.2295]
       ],
       saferRouteWaypoints: [
-        [30.2530, 77.0535],
-        [30.2540, 77.0520],
-        [30.2550, 77.0510],
-        [30.2555, 77.0505]
+        [28.6212, 77.2255],
+        [28.6184, 77.2272],
+        [28.6155, 77.2285],
+        [28.6129, 77.2295]
       ],
       demoWaypoints: {
-        safe: [30.2538, 77.0522],
-        minorDeviation: [30.2545, 77.0538],
-        severeDeviation: [30.2570, 77.0560],
-        returning: [30.2542, 77.0518],
-        destination: [30.2555, 77.0505]
+        safe: [28.6187, 77.2268],
+        minorDeviation: [28.6179, 77.2300],
+        severeDeviation: [28.6170, 77.2337],
+        returning: [28.6158, 77.2280],
+        destination: [28.6129, 77.2295]
       },
       contacts: [
         { id: 'c5', name: 'David Lin', relation: 'Spouse', phone: '+91 98980 11223', email: 'david.lin@example.in', notifySms: true, notifyCall: true },
@@ -320,30 +319,30 @@ window.SRG_DATA = {
       routeName: 'MMU Hostels Complex → Main Gate Transit Point',
       originName: 'MMU Hostels Complex (Girls/Boys Zone)',
       destinationName: 'Main Gate Transit & Bus Stop',
-      originCoords: [30.2520, 77.0450],
-      destinationCoords: [30.2468, 77.0460],
+      originCoords: [28.6180, 77.2427],
+      destinationCoords: [28.6129, 77.2295],
       corridorWidthMeters: 100,
       estimatedDurationMinutes: 16,
       isNightTime: false,
       escalationTimeoutMinutes: 15,
       routeWaypoints: [
-        [30.2520, 77.0450], // MMU Hostels Gate
-        [30.2505, 77.0465], // Sports Ground Road
-        [30.2485, 77.0462], // Campus Cafeteria Walkway
-        [30.2468, 77.0460]  // Main Gate Bus Terminus
+        [28.6180, 77.2427],
+        [28.6165, 77.2388],
+        [28.6146, 77.2340],
+        [28.6129, 77.2295]
       ],
       saferRouteWaypoints: [
-        [30.2520, 77.0450],
-        [30.2500, 77.0460],
-        [30.2480, 77.0460],
-        [30.2468, 77.0460]
+        [28.6180, 77.2427],
+        [28.6161, 77.2387],
+        [28.6143, 77.2340],
+        [28.6129, 77.2295]
       ],
       demoWaypoints: {
-        safe: [30.2505, 77.0465],
-        minorDeviation: [30.2512, 77.0435],
-        severeDeviation: [30.2530, 77.0410],
-        returning: [30.2495, 77.0462],
-        destination: [30.2468, 77.0460]
+        safe: [28.6165, 77.2388],
+        minorDeviation: [28.6153, 77.2362],
+        severeDeviation: [28.6145, 77.2260],
+        returning: [28.6148, 77.2336],
+        destination: [28.6129, 77.2295]
       },
       contacts: [
         { id: 'c7', name: 'Sarah Jenkins', relation: 'Hostel Chief Warden', phone: '+91 98711 22334', email: 'warden@mmumullana.org', notifySms: true, notifyCall: true },

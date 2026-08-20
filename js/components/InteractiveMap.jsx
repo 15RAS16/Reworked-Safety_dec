@@ -1,10 +1,10 @@
 /**
- * SafeRoute Guardian - Unified Campus Safety Map Orchestrator (v2.1)
- * Uses Google Maps JavaScript API (GoogleCampusMap) as the primary map component.
+ * SafeRoute Guardian - Unified Safety Map Orchestrator (v3.0)
+ * Uses MapTiler SDK JS (MapTilerCampusMap) as the primary map component.
  * Provides Leaflet / OpenStreetMap as an automatic fallback when:
- *   - No GOOGLE_MAPS_API_KEY is configured, OR
- *   - Google Maps API key fails / auth error / network offline.
- * Guarantees zero blank screens, clean unmount cleanup, and no dual-map container conflicts.
+ *   - No MAPTILER_API_KEY is configured, OR
+ *   - MapTiler SDK fails to load / auth error / network offline.
+ * Guarantees zero blank screens, clean unmount, and no dual-map container conflicts.
  * Adds a polished "Demo Map Mode" badge and "Reset Demo Map" button on the fallback map.
  */
 
@@ -13,25 +13,25 @@ window.InteractiveMap = function({
   corridorWidthMeters = 100,
   currentPos = null,
   travelerName = 'Traveler',
-  travelerAvatar = '👨‍🎓',
+  travelerAvatar = '🎒',
   safetyLevel = 'SAFE',
   isDeviation = false,
-  originName = 'MMU Main Gate',
-  destinationName = 'Academic Block',
+  originName = 'Merlion Park',
+  destinationName = 'Gardens by the Bay',
   isCompact = false,
   mapId = 'srg-campus-map',
   showCampusGeofence = true,
   onResetDemo = null
 }) {
-  // Determine initial engine: use Google only when a key is actually configured.
-  const hasKey = window.ConfigService && window.ConfigService.hasGoogleMapsKey && window.ConfigService.hasGoogleMapsKey();
-  const [activeEngine, setActiveEngine] = React.useState(hasKey ? 'google' : 'leaflet');
+  // Determine initial engine: use MapTiler only when a key is actually configured.
+  const hasKey = window.ConfigService && window.ConfigService.hasMapTilerKey && window.ConfigService.hasMapTilerKey();
+  const [activeEngine, setActiveEngine] = React.useState(hasKey ? 'maptiler' : 'leaflet');
 
-  // If active engine is Google Maps, render GoogleCampusMap with fallback handler
-  if (activeEngine === 'google' && window.GoogleCampusMap) {
+  // If active engine is MapTiler, render MapTilerCampusMap with fallback handler
+  if (activeEngine === 'maptiler' && window.MapTilerCampusMap) {
     return (
-      <window.GoogleCampusMap
-        mapId={mapId + '-gmap'}
+      <window.MapTilerCampusMap
+        mapId={mapId + '-maptiler'}
         routeWaypoints={routeWaypoints}
         corridorWidthMeters={corridorWidthMeters}
         currentPos={currentPos}
@@ -50,7 +50,7 @@ window.InteractiveMap = function({
 
   // Secondary Leaflet / OpenStreetMap Fallback Component
   return (
-    <LeafletCampusFallback
+    <LeafletMarinaBayFallback
       mapId={mapId + '-leaflet'}
       routeWaypoints={routeWaypoints}
       corridorWidthMeters={corridorWidthMeters}
@@ -63,7 +63,7 @@ window.InteractiveMap = function({
       destinationName={destinationName}
       isCompact={isCompact}
       showCampusGeofence={showCampusGeofence}
-      onSwitchToGoogle={hasKey ? () => setActiveEngine('google') : null}
+      onSwitchToMapTiler={hasKey ? () => setActiveEngine('maptiler') : null}
       onResetDemo={onResetDemo}
     />
   );
@@ -71,22 +71,22 @@ window.InteractiveMap = function({
 
 /**
  * Isolated Leaflet / OpenStreetMap Fallback Component
- * Renders the full MMU campus map experience using open-source tiles.
+ * Renders the full Marina Bay safety map experience using open-source tiles.
  */
-function LeafletCampusFallback({
+function LeafletMarinaBayFallback({
   routeWaypoints = [],
   corridorWidthMeters = 100,
   currentPos = null,
   travelerName = 'Traveler',
-  travelerAvatar = '👨‍🎓',
+  travelerAvatar = '🎒',
   safetyLevel = 'SAFE',
   isDeviation = false,
-  originName = 'MMU Main Gate',
-  destinationName = 'Academic Block',
+  originName = 'Merlion Park',
+  destinationName = 'Gardens by the Bay',
   isCompact = false,
   mapId = 'srg-leaflet-fallback',
   showCampusGeofence = true,
-  onSwitchToGoogle,
+  onSwitchToMapTiler,
   onResetDemo
 }) {
   const mapContainerRef = React.useRef(null);
@@ -103,25 +103,23 @@ function LeafletCampusFallback({
     contextMarkers: []
   });
 
-  const defaultCampusCenter = (window.SRG_DATA && window.SRG_DATA.campus && window.SRG_DATA.campus.centerCoords) || [30.2505, 77.0495];
-  const campusBoundary = (window.SRG_DATA && window.SRG_DATA.campus && window.SRG_DATA.campus.boundaryPolygon) || [
-    [30.2458, 77.0445],
-    [30.2458, 77.0550],
-    [30.2558, 77.0560],
-    [30.2568, 77.0482],
-    [30.2538, 77.0438],
-    [30.2458, 77.0445]
+  // Marina Bay campus data
+  const campus = (window.SRG_DATA && window.SRG_DATA.campus) || {};
+  const defaultCampusCenter = campus.centerCoords || [1.2838, 103.8607];
+  const campusBoundary = campus.boundaryPolygon || [
+    [1.2800, 103.8550],
+    [1.2800, 103.8665],
+    [1.2875, 103.8665],
+    [1.2875, 103.8550],
+    [1.2800, 103.8550]
   ];
 
-  // Fixed campus POIs always displayed regardless of traveler position
+  // Marina Bay showcase POIs
   const campusPOIs = [
-    { point: [30.2530, 77.0535], icon: '🏥', label: 'MM Hospital Emergency Center', category: '24/7 Medical' },
-    { point: [30.2472, 77.0468], icon: '🏛️', label: 'MMU Main Gate Security Post', category: 'Campus Security' },
-    { point: [30.2495, 77.0492], icon: '📚', label: 'Central Library Helpdesk', category: 'Student Support' },
-    { point: [30.2468, 77.0460], icon: '🚌', label: 'Campus Bus Stop & Transit Hub', category: 'Transport' },
-    { point: [30.2520, 77.0450], icon: '🏢', label: 'Hostels Complex', category: 'Residential' },
-    { point: [30.2505, 77.0505], icon: '🎓', label: 'Academic Block 3 (Engineering)', category: 'Academic Zone' },
-    { point: [30.2540, 77.0475], icon: '⚽', label: 'MMU Sports Complex', category: 'Recreation' }
+    { point: [1.2850, 103.8560], icon: '🦁', label: 'Merlion Park', category: 'Iconic Singapore Landmark' },
+    { point: [1.2834, 103.8607], icon: '🏨', label: 'Marina Bay Sands', category: 'Waterfront Landmark' },
+    { point: [1.2816, 103.8636], icon: '🌿', label: 'Gardens by the Bay', category: 'National Garden' },
+    { point: [1.2825, 103.8618], icon: '🛡️', label: 'Safe Help Point', category: '24/7 Security Post' }
   ];
 
   const getMarkerColor = () => {
@@ -138,13 +136,11 @@ function LeafletCampusFallback({
     const latOffset = (bufferMeters / 111320);
     const leftSide = [];
     const rightSide = [];
-
     for (let i = 0; i < waypoints.length; i++) {
       const p = waypoints[i];
       if (!p || p.length < 2) continue;
       const cosLat = Math.cos(p[0] * Math.PI / 180) || 1;
       const lngOffset = (bufferMeters / (111320 * cosLat));
-
       leftSide.push([p[0] + latOffset, p[1] - lngOffset]);
       rightSide.unshift([p[0] - latOffset, p[1] + lngOffset]);
     }
@@ -167,7 +163,7 @@ function LeafletCampusFallback({
     }
   };
 
-  // Initialize Leaflet Map + draw static campus POIs
+  // Initialize Leaflet Map + draw static Marina Bay POIs
   React.useEffect(() => {
     if (!mapContainerRef.current) return;
 
@@ -188,7 +184,7 @@ function LeafletCampusFallback({
 
       const map = window.L.map(mapContainerRef.current, {
         center: initialCenter,
-        zoom: 16,
+        zoom: isCompact ? 14 : 15,
         zoomControl: !isCompact,
         attributionControl: false
       });
@@ -201,7 +197,7 @@ function LeafletCampusFallback({
       leafletMapRef.current = map;
       setMapLoadError(false);
 
-      // Draw static campus POIs immediately after map init
+      // Draw static showcase POIs immediately
       layersRef.current.contextMarkers = campusPOIs.map(item =>
         window.L.marker(item.point, {
           icon: window.L.divIcon({
@@ -239,11 +235,11 @@ function LeafletCampusFallback({
       if (showCampusGeofence && campusBoundary && campusBoundary.length > 2) {
         layersRef.current.campusGeofence = window.L.polygon(campusBoundary, {
           color: '#10B981',
-          weight: 2,
-          dashArray: '6, 6',
+          weight: 2.5,
+          dashArray: '6, 5',
           fillColor: '#10B981',
-          fillOpacity: 0.05
-        }).addTo(map).bindTooltip('MMU Mullana Campus Geofence', { sticky: true });
+          fillOpacity: 0.07
+        }).addTo(map).bindTooltip('Marina Bay Waterfront Safety Geofence', { sticky: true });
       }
 
       if (layersRef.current.corridorBuffer) map.removeLayer(layersRef.current.corridorBuffer);
@@ -312,7 +308,7 @@ function LeafletCampusFallback({
       const travelerHtml = `
         <div style="position:relative;width:40px;height:40px;display:flex;align-items:center;justify-content:center;">
           <div style="width:34px;height:34px;border-radius:50%;background:${markerColor};border:3px solid #FFFFFF;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 12px rgba(0,0,0,0.4);font-size:18px;">
-            ${travelerAvatar || '🧭'}
+            ${travelerAvatar || '🎒'}
           </div>
         </div>
       `;
@@ -353,14 +349,14 @@ function LeafletCampusFallback({
     );
   }
 
-  const safetyColor = safetyLevel === 'EMERGENCY' ? '#EF4444' : isDeviation ? '#F59E0B' : '#10B981';
-  const safetyText = safetyLevel === 'EMERGENCY' ? 'SOS Active' : isDeviation ? 'Outside Corridor' : 'Safe in Geofence';
+  const safetyColor = safetyLevel === 'EMERGENCY' ? '#EF4444' : (isDeviation || safetyLevel === 'HIGH_RISK') ? '#F59E0B' : '#10B981';
+  const safetyText = safetyLevel === 'EMERGENCY' ? 'SOS Active' : (isDeviation || safetyLevel === 'HIGH_RISK') ? 'Outside Safe Corridor' : 'Safe — Inside Geofence';
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>
       <div id={mapId} ref={mapContainerRef} className="srg-map-container" />
 
-      {/* MMU Campus Geofence Title Badge — top left */}
+      {/* Marina Bay Geofence Title Badge — top left */}
       <div style={{
         position: 'absolute', top: '12px', left: '12px',
         background: 'rgba(11, 21, 40, 0.92)', backdropFilter: 'blur(10px)',
@@ -369,11 +365,11 @@ function LeafletCampusFallback({
         display: 'flex', alignItems: 'center', gap: '6px', zIndex: 500,
         boxShadow: '0 4px 12px rgba(0,0,0,0.3)', pointerEvents: 'none'
       }}>
-        <span>🏛️</span>
-        <span>MMU Mullana Campus Safety Geofence</span>
+        <span>🦁</span>
+        <span>Marina Bay Waterfront Safety Geofence</span>
       </div>
 
-      {/* DEMO MAP MODE badge — top right (polished, competition-visible) */}
+      {/* DEMO MAP MODE badge — top right */}
       <div style={{
         position: 'absolute', top: '12px', right: '12px',
         background: 'rgba(245, 158, 11, 0.18)', backdropFilter: 'blur(10px)',
@@ -414,7 +410,7 @@ function LeafletCampusFallback({
             cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px',
             boxShadow: '0 3px 10px rgba(0,0,0,0.25)'
           }}
-          title="Reset demo map to default MMU campus scenario"
+          title="Reset demo map to Marina Bay default scenario"
         >
           <span>&#8635;</span>
           <span>Reset Demo Map</span>
@@ -431,15 +427,19 @@ function LeafletCampusFallback({
         flexWrap: 'wrap', pointerEvents: 'none'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-          <span style={{ display: 'inline-block', width: '12px', height: '3px', background: '#2563EB', borderRadius: '1px' }}></span>
+          <span style={{ display: 'inline-block', width: '12px', height: '3px', background: '#2563EB', borderRadius: '1px' }} />
           <span>Approved Route</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-          <span style={{ display: 'inline-block', width: '10px', height: '10px', background: 'rgba(56,189,248,0.3)', border: '1px solid #0284C7', borderRadius: '2px' }}></span>
+          <span style={{ display: 'inline-block', width: '10px', height: '10px', background: 'rgba(56,189,248,0.3)', border: '1px solid #0284C7', borderRadius: '2px' }} />
           <span>{corridorWidthMeters}m Buffer</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-          <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', background: getMarkerColor() }}></span>
+          <span style={{ display: 'inline-block', width: '10px', height: '10px', background: 'rgba(16,185,129,0.3)', border: '1px solid #10B981', borderRadius: '2px' }} />
+          <span>Safe Geofence</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+          <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', background: getMarkerColor() }} />
           <span>{travelerName} ({safetyLevel})</span>
         </div>
       </div>

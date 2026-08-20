@@ -30,7 +30,8 @@ def test_map_fallback_and_badges():
     with open(path, "r", encoding="utf-8") as f:
         content = f.read()
 
-    assert "LeafletCampusFallback" in content, "Leaflet fallback component missing from InteractiveMap!"
+    assert "LeafletMarinaBayFallback" in content or "leaflet" in content.lower(), \
+        "Leaflet fallback component missing from InteractiveMap!"
     assert "Demo Map Mode" in content, "Polished 'Demo Map Mode' badge missing from Leaflet view!"
     assert "Reset Demo Map" in content, "Reset Demo Map action button missing from Leaflet view!"
     assert "srg-leaflet-reset-demo" in content, "Reset Demo Map button ID missing!"

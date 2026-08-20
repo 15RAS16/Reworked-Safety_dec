@@ -16,7 +16,7 @@ def main():
     test_files = [
         "tests/riskEngine.test.py",
         "tests/securityRules.test.py",
-        "tests/googleMaps.test.py",
+        "tests/mapTiler.test.py",
         "tests/test_e2e_verification.py",
         "tests/competitionReady.test.py"
     ]

@@ -36,10 +36,10 @@ window.ConfigService = (function() {
   const appId = env.VITE_FIREBASE_APP_ID || env.appId || '';
   const measurementId = env.VITE_FIREBASE_MEASUREMENT_ID || env.measurementId || '';
 
-  // Google Maps JavaScript API Key (read from VITE_GOOGLE_MAPS_API_KEY or GOOGLE_MAPS_API_KEY)
-  const rawGoogleMapsKey = env.VITE_GOOGLE_MAPS_API_KEY || env.GOOGLE_MAPS_API_KEY ||
-    (typeof window !== 'undefined' && (window.VITE_GOOGLE_MAPS_API_KEY || window.GOOGLE_MAPS_API_KEY)) || '';
-  const googleMapsApiKey = isPlaceholder(rawGoogleMapsKey) ? '' : rawGoogleMapsKey.trim();
+  // MapTiler API Key (read from VITE_MAPTILER_API_KEY or MAPTILER_API_KEY)
+  const rawMapTilerKey = env.VITE_MAPTILER_API_KEY || env.MAPTILER_API_KEY ||
+    (typeof window !== 'undefined' && (window.VITE_MAPTILER_API_KEY || window.MAPTILER_API_KEY)) || '';
+  const mapTilerApiKey = isPlaceholder(rawMapTilerKey) ? '' : rawMapTilerKey.trim();
 
   // Demo mode is explicitly controlled by build-time variable VITE_ENABLE_DEMO_MODE or default true for development evaluation
   const enableDemoMode = env.VITE_ENABLE_DEMO_MODE === 'true' || env.enableDemoMode === true || env.VITE_ENABLE_DEMO_MODE === undefined;
@@ -68,12 +68,12 @@ window.ConfigService = (function() {
       return firebaseConfig;
     },
 
-    getGoogleMapsApiKey: function() {
-      return googleMapsApiKey;
+    getMapTilerApiKey: function() {
+      return mapTilerApiKey;
     },
 
-    hasGoogleMapsKey: function() {
-      return !!(googleMapsApiKey && googleMapsApiKey.length > 5);
+    hasMapTilerKey: function() {
+      return !!(mapTilerApiKey && mapTilerApiKey.length > 5);
     },
 
     isDemoModeEnabled: function() {
@@ -127,25 +127,25 @@ window.ConfigService = (function() {
     },
 
     /**
-     * Returns a structured status badge for the Google Maps provider.
+     * Returns a structured status badge for the MapTiler provider.
      * Never exposes the actual API key value.
      */
     getMapStatusBadge: function() {
-      if (googleMapsApiKey && googleMapsApiKey.length > 5) {
+      if (mapTilerApiKey && mapTilerApiKey.length > 5) {
         return {
-          label: 'Google Maps',
-          mode: 'google',
+          label: 'MapTiler (Active)',
+          mode: 'maptiler',
           color: '#38BDF8',
           bg: 'rgba(56,189,248,0.12)',
-          detail: 'Key configured \u2713. Will fall back to OpenStreetMap if auth fails.'
+          detail: 'MapTiler API Key configured \u2713. High-quality vector styles active.'
         };
       }
       return {
-        label: 'OpenStreetMap (Demo)',
+        label: 'OpenStreetMap (Offline Demo)',
         mode: 'leaflet',
         color: '#F59E0B',
         bg: 'rgba(245,158,11,0.12)',
-        detail: 'No Google Maps key. Leaflet/OpenStreetMap is active as the primary map.'
+        detail: 'No MapTiler API Key. Local OpenStreetMap is active for competition demo.'
       };
     }
   };

@@ -158,6 +158,31 @@ window.FirebaseService = (function() {
     return `${prefix}-${Math.random().toString(36).substring(2, 9).toUpperCase()}-${Date.now().toString(36).toUpperCase()}`;
   }
 
+  /**
+   * Translate Firebase auth error codes into user-friendly messages.
+   */
+  function friendlyAuthError(err) {
+    const code = (err && err.code) || '';
+    const map = {
+      'auth/wrong-password':            'Incorrect password. Please check your password and try again.',
+      'auth/user-not-found':            'No account found with that email. Please check the address or create a new account.',
+      'auth/email-already-in-use':      'An account with this email already exists. Please sign in instead.',
+      'auth/invalid-email':             'The email address format is invalid. Please enter a valid email.',
+      'auth/weak-password':             'Password must be at least 6 characters long.',
+      'auth/operation-not-allowed':     'Email/password sign-in is not enabled. Please enable it in the Firebase Console under Authentication › Sign-in Methods.',
+      'auth/too-many-requests':         'Too many failed attempts. Please wait a few minutes before trying again.',
+      'auth/network-request-failed':    'Network error. Please check your internet connection and try again.',
+      'auth/user-disabled':             'This account has been disabled. Please contact the campus safety administrator.',
+      'auth/invalid-credential':        'Invalid credentials. Please check your email and password.',
+      'permission-denied':              'Firestore permission denied. Check your security rules or run in Demo Mode.',
+    };
+    if (map[code]) return map[code];
+    // Partial match for generic Firebase errors
+    if (code.includes('network')) return 'Network error. Please check your internet connection.';
+    if (code.includes('permission')) return 'Access denied. Security rules are preventing this action.';
+    return (err && err.message) ? err.message : 'An unexpected error occurred. Please try again.';
+  }
+
   return {
     isLive: function() {
       return isFirebaseLive;
@@ -181,7 +206,7 @@ window.FirebaseService = (function() {
       return currentAuthUser || (isFirebaseLive && authInstance ? authInstance.currentUser : getLocalSession());
     },
 
-    // 1. Google OAuth Authentication
+    // 1. Google OAuth Authentication (@internal — not exposed in UI, kept for completeness)
     signInWithGoogle: async function() {
       if (isFirebaseLive && authInstance && window.firebase) {
         const provider = new window.firebase.auth.GoogleAuthProvider();
@@ -220,17 +245,21 @@ window.FirebaseService = (function() {
       if (password.length < 6) throw new Error('Password must be at least 6 characters long.');
 
       if (isFirebaseLive && authInstance) {
-        const userCredential = await authInstance.createUserWithEmailAndPassword(email, password);
-        if (displayName && userCredential.user) {
-          await userCredential.user.updateProfile({ displayName });
+        try {
+          const userCredential = await authInstance.createUserWithEmailAndPassword(email, password);
+          if (displayName && userCredential.user) {
+            await userCredential.user.updateProfile({ displayName });
+          }
+          // Send email verification
+          if (userCredential.user && typeof userCredential.user.sendEmailVerification === 'function') {
+            try {
+              await userCredential.user.sendEmailVerification();
+            } catch (e) {}
+          }
+          return userCredential.user;
+        } catch (err) {
+          throw new Error(friendlyAuthError(err));
         }
-        // Send email verification
-        if (userCredential.user && typeof userCredential.user.sendEmailVerification === 'function') {
-          try {
-            await userCredential.user.sendEmailVerification();
-          } catch (e) {}
-        }
-        return userCredential.user;
       } else {
         if (!window.ConfigService.isDemoModeEnabled()) {
           throw new Error('Firebase configuration missing. Please configure Firebase to register accounts.');
@@ -262,8 +291,12 @@ window.FirebaseService = (function() {
       if (!email || !password) throw new Error('Please enter your email and password.');
 
       if (isFirebaseLive && authInstance) {
-        const userCredential = await authInstance.signInWithEmailAndPassword(email, password);
-        return userCredential.user;
+        try {
+          const userCredential = await authInstance.signInWithEmailAndPassword(email, password);
+          return userCredential.user;
+        } catch (err) {
+          throw new Error(friendlyAuthError(err));
+        }
       } else {
         if (!window.ConfigService.isDemoModeEnabled()) {
           throw new Error('Firebase configuration missing. Real authentication requires valid Firebase keys in .env.local.');

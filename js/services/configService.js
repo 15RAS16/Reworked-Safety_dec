@@ -92,6 +92,61 @@ window.ConfigService = (function() {
         return '⚡ Demo / Simulated Mode Active (Isolated)';
       }
       return '⚠️ Firebase Setup Required';
+    },
+
+    /**
+     * Returns a structured status badge object for the admin diagnostic panel.
+     * Never exposes actual API key values — only whether they are present.
+     */
+    getFirebaseStatusBadge: function() {
+      if (isConfigured) {
+        return {
+          label: 'Firebase Connected',
+          mode: 'live',
+          color: '#10B981',
+          bg: 'rgba(16,185,129,0.12)',
+          detail: 'Valid project configuration detected. Email/password auth active.'
+        };
+      }
+      if (enableDemoMode) {
+        return {
+          label: 'Competition Demo Mode',
+          mode: 'demo',
+          color: '#F59E0B',
+          bg: 'rgba(245,158,11,0.12)',
+          detail: 'No Firebase config found. Running fully offline using isolated local storage.'
+        };
+      }
+      return {
+        label: 'Firebase Setup Required',
+        mode: 'unconfigured',
+        color: '#EF4444',
+        bg: 'rgba(239,68,68,0.12)',
+        detail: 'Add VITE_FIREBASE_API_KEY, VITE_FIREBASE_PROJECT_ID and VITE_FIREBASE_APP_ID to .env.local.'
+      };
+    },
+
+    /**
+     * Returns a structured status badge for the Google Maps provider.
+     * Never exposes the actual API key value.
+     */
+    getMapStatusBadge: function() {
+      if (googleMapsApiKey && googleMapsApiKey.length > 5) {
+        return {
+          label: 'Google Maps',
+          mode: 'google',
+          color: '#38BDF8',
+          bg: 'rgba(56,189,248,0.12)',
+          detail: 'Key configured \u2713. Will fall back to OpenStreetMap if auth fails.'
+        };
+      }
+      return {
+        label: 'OpenStreetMap (Demo)',
+        mode: 'leaflet',
+        color: '#F59E0B',
+        bg: 'rgba(245,158,11,0.12)',
+        detail: 'No Google Maps key. Leaflet/OpenStreetMap is active as the primary map.'
+      };
     }
   };
 })();

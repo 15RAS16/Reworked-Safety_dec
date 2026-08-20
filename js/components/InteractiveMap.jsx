@@ -103,6 +103,7 @@ function LeafletMarinaBayFallback({
     contextMarkers: []
   });
 
+<<<<<<< HEAD
   // Marina Bay campus data
   const campus = (window.SRG_DATA && window.SRG_DATA.campus) || {};
   const defaultCampusCenter = campus.centerCoords || [1.2838, 103.8607];
@@ -112,14 +113,33 @@ function LeafletMarinaBayFallback({
     [1.2875, 103.8665],
     [1.2875, 103.8550],
     [1.2800, 103.8550]
+=======
+  const defaultCampusCenter = (window.SRG_DATA && window.SRG_DATA.campus && window.SRG_DATA.campus.centerCoords) || [28.6129, 77.2295];
+  const campusBoundary = (window.SRG_DATA && window.SRG_DATA.campus && window.SRG_DATA.campus.boundaryPolygon) || [
+    [30.2458, 77.0445],
+    [30.2458, 77.0550],
+    [30.2558, 77.0560],
+    [30.2568, 77.0482],
+    [30.2538, 77.0438],
+    [30.2458, 77.0445]
+>>>>>>> b429003ce8a0299b83ffdd9a46c682d6766b8904
   ];
 
   // Marina Bay showcase POIs
   const campusPOIs = [
+<<<<<<< HEAD
     { point: [1.2850, 103.8560], icon: '🦁', label: 'Merlion Park', category: 'Iconic Singapore Landmark' },
     { point: [1.2834, 103.8607], icon: '🏨', label: 'Marina Bay Sands', category: 'Waterfront Landmark' },
     { point: [1.2816, 103.8636], icon: '🌿', label: 'Gardens by the Bay', category: 'National Garden' },
     { point: [1.2825, 103.8618], icon: '🛡️', label: 'Safe Help Point', category: '24/7 Security Post' }
+=======
+    { point: [28.6129, 77.2295], icon: '🛡️', label: 'India Gate Safety Point', category: 'Showcase Start Point' },
+    { point: [28.6107, 77.2324], icon: '📍', label: 'National War Memorial', category: 'Verified Landmark' },
+    { point: [28.6145, 77.2290], icon: '🆘', label: 'Kartavya Path Help Point', category: 'Safety Assistance' },
+    { point: [28.6139, 77.2352], icon: '🏟️', label: 'National Stadium', category: 'Public Landmark' },
+    { point: [28.6212, 77.2255], icon: '🏛️', label: 'Patiala House Court', category: 'Public Landmark' },
+    { point: [28.6180, 77.2427], icon: '🚇', label: 'Pragati Maidan', category: 'Transit Landmark' }
+>>>>>>> b429003ce8a0299b83ffdd9a46c682d6766b8904
   ];
 
   const getMarkerColor = () => {
@@ -365,8 +385,13 @@ function LeafletMarinaBayFallback({
         display: 'flex', alignItems: 'center', gap: '6px', zIndex: 500,
         boxShadow: '0 4px 12px rgba(0,0,0,0.3)', pointerEvents: 'none'
       }}>
+<<<<<<< HEAD
         <span>🦁</span>
         <span>Marina Bay Waterfront Safety Geofence</span>
+=======
+        <span>🏛️</span>
+        <span>{(window.SRG_DATA && window.SRG_DATA.campus && window.SRG_DATA.campus.geofenceLabel) || 'Safety Geofence — Demo Data'}</span>
+>>>>>>> b429003ce8a0299b83ffdd9a46c682d6766b8904
       </div>
 
       {/* DEMO MAP MODE badge — top right */}

@@ -50,7 +50,7 @@ Tourists can access only their own account and personal safety data:
 Parents can access only their explicitly linked family members or dependents:
 - **Linked Dependents Dashboard**: View live travel status, risk score, and battery telemetry for linked children or elderly family members.
 - **Consent-Based Dependent Linking**: Cryptographic single-use expiring token workflow ensuring verifiable consent.
-- **Live Route & Corridor Monitor**: Real-time Leaflet tracking showing designated school or commute corridors and deviation alerts.
+- **Live Route & Corridor Monitor**: Real-time tracking showing designated school or commute corridors and deviation alerts.
 - **Family Incident Timeline**: Chronological audit trail of check-ins, route movements, and safe beacon updates.
 - **Family Emergency Network**: Manage family safety contacts and school safety liaisons.
 
@@ -88,7 +88,7 @@ SafeRoute Guardian features a custom, modern, safety-tech design system:
 
 ## 🧠 Point-to-Polyline Geospatial AI Risk Engine
 
-SafeRoute Guardian computes a deterministic, explainable safety risk score from **0 to 100** using 6 contextual signals. Unlike naive waypoint checks, the upgraded engine calculates the exact **orthogonal projection** onto every polyline segment:
+SafeRoute Guardian computes a deterministic, explainable safety risk score from **0 to 100** using 6 contextual signals. Unlike naive waypoint checks, the engine calculates the exact **orthogonal projection** onto every polyline segment:
 
 $$\text{dist}(P, AB) = \min_{t \in [0, 1]} \| P - (A + t(B - A)) \|$$
 
@@ -105,41 +105,37 @@ $$\text{dist}(P, AB) = \min_{t \in [0, 1]} \| P - (A + t(B - A)) \|$$
 - `0–29`: **Safe** (Emerald) — Smooth progress within designated corridor.
 - `30–59`: **Caution** (Amber) — Minor deviation; gentle in-app route reminder dispatched.
 - `60–79`: **High Risk** (Orange) — Significant drift; "Are you safe?" check-in prompt and admin alert triggered.
-- `80–100`: **Emergency** (Crimson) — Emergency Protocol activated; sirens sound and
+- `80–100`: **Emergency** (Crimson) — Emergency Protocol activated; sirens sound and alerts dispatch.
 
-## 🗺️ Google Maps JavaScript API & Campus Safety Geofencing
+---
 
-SafeRoute Guardian integrates the **Google Maps JavaScript API** as its primary live map engine with geometry-based geofence calculation, centered on **Maharishi Markandeshwar (Deemed to be University), Mullana, Ambala Cantonment, Haryana, India**.
+## 🗺️ MapTiler SDK & Marina Bay Showcase Geofencing
+
+SafeRoute Guardian uses **MapTiler SDK JS** (built on MapLibre GL JS) as its primary vector map engine, centered on the **Marina Bay Waterfront, Singapore** (`1.2838, 103.8607`).
 
 ### Map Features & Resilient Fallback:
-- **Campus Centered**: Centered on MMU Mullana (`30.2505, 77.0495`) in normal roadmap view (`ROADMAP`) with zoom, fullscreen, and map-type controls enabled.
-- **Campus Safety Geofence**: Realistic campus perimeter polygon drawn with real-time `isPointInsideCampusGeofence` evaluation.
-- **Campus POI Safe Stations**:
-  - 🏛️ Main Gate (Gate 1 Security Post)
-  - 🎓 Academic Block 3 (Engineering Complex)
-  - 📚 Central Library & Student Help Kiosk
-  - 🏢 Hostels Complex (Girls & Boys Zones)
-  - 🏥 MM Super Speciality Hospital & 24/7 Trauma Emergency
-  - ⚽ MMU Sports Complex & Arena
-  - 🚌 MMU Bus Stop & Transit Terminus
+- **Showcase Centered**: Centered on Marina Bay (`1.2838, 103.8607`) with high-resolution vector styles.
+- **Safety Geofence**: Marina Bay waterfront bounding polygon drawn with real-time `isPointInsideCampusGeofence` evaluation.
+- **Showcase POI Safe Stations**:
+  - 🦁 Merlion Park (Iconic Singapore Landmark)
+  - 🏨 Marina Bay Sands (Waterfront Landmark)
+  - 🌿 Gardens by the Bay (National Garden)
+  - 🛡️ Safe Help Point (24/7 Security Post)
 - **Safe Walking Corridors**: Approved route path rendered via polyline wrapped in a translucent geofence buffer polygon.
 - **Dynamic Traveler Status Pins**: Safe (Emerald 🟢), Caution (Amber 🟡), and SOS Panic (Red 🔴).
 - **Resilient Fallback Handling**:
-  - Displays *"Loading MMU Mullana Campus Safety Map…"* during SDK initialization.
-  - **Automatic Fallback Map**: If `GOOGLE_MAPS_API_KEY` is invalid, restricted, domain-blocked, or the client is offline, the map **automatically switches to Leaflet/OpenStreetMap** within 350ms.
-  - **Demo Map Mode Badge**: Renders a polished orange badge overlay stating **"Demo Map Mode"** when OpenStreetMap fallback is active.
+  - Displays *"Loading Marina Bay Safety Map…"* during SDK initialization.
+  - **Automatic Fallback Map**: If `MAPTILER_API_KEY` is not configured or network tiles fail, the map **automatically falls back to OpenStreetMap/Leaflet** with zero blank screens.
+  - **Demo Map Mode Badge**: Renders a polished amber badge overlay stating **"Demo Map Mode"** when OpenStreetMap fallback is active.
   - **Reset Demo Map**: Presenters can tap **"Reset Demo Map"** to quickly restore default safe coordinates.
   - Zero dual-map container collisions; all instances, markers, and listeners are cleanly unmounted.
 
-### 🔑 Google Maps API Key Security & Restriction Rules:
-> [!IMPORTANT]
-> **Strict API Key Security Checklist**:
-> 1. **Never Hardcode Keys**: Never embed Google Maps API keys in source code or commit them to Git repositories.
-> 2. **Environment Variable Configuration**: Set the key in your `.env.local` for local development or in **Vercel Project Settings → Environment Variables**:
->    - Variable Name: `VITE_GOOGLE_MAPS_API_KEY` (or `GOOGLE_MAPS_API_KEY`)
-> 3. **Google Cloud Console Restrictions (Mandatory)**:
->    - Go to **Google Cloud Console → APIs & Services → Credentials**.
->    - Select your Maps API key and configure **Application restrictions** for HTTP referrers.
+### 🔑 MapTiler API Key Setup:
+1. Get a free API key at [cloud.maptiler.com](https://cloud.maptiler.com) (free tier: 100,000 tile requests/month).
+2. Add your key to `.env.local` for local development or set it in **Vercel Project Settings → Environment Variables**:
+   - Variable Name: `VITE_MAPTILER_API_KEY` (or `MAPTILER_API_KEY`)
+3. In your MapTiler Cloud console, restrict your key's **Allowed HTTP Origins** to `http://localhost:*` and your production domain.
+4. **Offline/Keyless Mode**: SafeRoute Guardian works out of the box even without a key, gracefully using the built-in Leaflet/OpenStreetMap fallback.
 
 ---
 
@@ -147,7 +143,7 @@ SafeRoute Guardian integrates the **Google Maps JavaScript API** as its primary 
 
 SafeRoute Guardian is fully configured for zero-friction static deployment on **Vercel**.
 
-### Vercel Project Settings (Recommended Option A — Static Deployment):
+### Vercel Project Settings (Static Deployment):
 1. Push your repository to GitHub / GitLab / Bitbucket.
 2. In your [Vercel Dashboard](https://vercel.com/dashboard), click **Add New...** → **Project** and import your repository.
 3. Configure the Project Settings:
@@ -188,14 +184,14 @@ Use this flow to showcase SafeRoute Guardian to judges during live demos:
 
 1. **Clean Login Screen (30 seconds)**:
    - Navigate to the app. Point out the clean Instagram-style login page.
-   - Note the complete removal of Google sign-in to protect student metadata.
-   - Register or sign in with email/password (e.g. `judge@mmu.edu` / `mmu123`).
+   - Note the removal of third-party OAuth to protect traveler metadata.
+   - Register or sign in with email/password (e.g. `judge@safe.sg` / `demo123`).
 2. **First-Time Guided Onboarding (30 seconds)**:
    - Complete the onboarding as an **Organization Administrator** (👑).
-   - Once completed, point out the **System Status** dashboard showing map status (OpenStreetMap Fallback active with badge) and Firebase mode (Competition Demo Mode active).
+   - Once completed, point out the **System Status** dashboard showing map status (MapTiler or OpenStreetMap Demo active) and Firebase mode (Competition Demo Mode active).
 3. **Geofence Simulation & AI Risk Scoring (40 seconds)**:
    - Go to the **Live Fleet Monitor** tab. Open the **Demo Simulation Suite**.
-   - Click **Safe on Route** 🟢: Marker centers on MMU campus; risk is 0.
+   - Click **Safe on Route** 🟢: Marker centers on Marina Bay; risk is 0.
    - Click **Minor Deviation** 🟡: Marker drifts 120m off path; risk rises to ~40; status goes yellow.
    - Click **High Risk Drift** 🟠: Marker drifts 450m; alert sounds; risk rises to 68; warning modal pops up asking "Are you safe?" with a countdown.
 4. **Emergency SOS Verification (20 seconds)**:
@@ -207,7 +203,7 @@ Use this flow to showcase SafeRoute Guardian to judges during live demos:
 
 ## 🧪 Automated Testing
 
-SafeRoute Guardian includes an automated test suite verifying both geospatial calculations and security rules:
+SafeRoute Guardian includes an automated test suite verifying MapTiler integration, geospatial calculations, static deployment compliance, and security rules:
 
 ```powershell
 python tests/run_all_tests.py
@@ -231,8 +227,8 @@ http://localhost:8080
 
 SafeRoute Guardian was architected, production-hardened, and designed using **Google Antigravity**, Google's advanced agentic coding assistant. Antigravity was utilized for:
 - Implementing the Point-to-Polyline-Segment geospatial projection engine.
-- Hardening Firebase Authentication, Google OAuth, and Firestore Security Rules.
+- Hardening Firebase Authentication and Firestore Security Rules.
+- Integrating MapTiler JS SDK with automatic OpenStreetMap fallback resilience.
 - Crafting the role-tailored UI/UX design system and circular SVG RiskGauge.
 - Developing serverless Cloud Functions for emergency dispatch and cryptographic invitations.
 - Building the automated test runner and verification suite.
-

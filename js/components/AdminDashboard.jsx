@@ -16,6 +16,7 @@ window.AdminDashboard = function({
   currentPos,
   journeyState,
   onTriggerDemoStep,
+  onResetDemo,
   alerts = [],
   onClearAlerts,
   contacts = [],
@@ -272,6 +273,18 @@ window.AdminDashboard = function({
           >
             🧪 Test Emergency (Silent)
           </button>
+
+          {onResetDemo && (
+            <button
+              type="button"
+              className="srg-btn srg-btn-outline srg-btn-sm"
+              onClick={onResetDemo}
+              title="Reset demo to default MMU campus scenario"
+              style={{ borderColor: '#38BDF8', color: '#38BDF8' }}
+            >
+              &#8635; Reset Demo
+            </button>
+          )}
         </div>
       </div>
 
@@ -346,6 +359,14 @@ window.AdminDashboard = function({
         >
           ◷ Audit History ({journeyTimeline.length})
         </button>
+
+        <button
+          type="button"
+          className={`srg-tab-btn ${activeTab === 'system-status' ? 'active' : ''}`}
+          onClick={() => setActiveTab('system-status')}
+        >
+          ⚙️ System Status
+        </button>
       </div>
 
       {/* Tab 1: Live Map Monitor */}
@@ -365,7 +386,7 @@ window.AdminDashboard = function({
             </div>
 
             <div style={{ flex: 1, position: 'relative', minHeight: '460px' }}>
-              <window.InteractiveMap 
+              <window.InteractiveMap
                 mapId="admin-main-map"
                 routeWaypoints={scenario.routeWaypoints || []}
                 corridorWidthMeters={scenario.corridorWidthMeters || 100}
@@ -376,6 +397,7 @@ window.AdminDashboard = function({
                 isDeviation={risk.distanceOffCorridor > 0}
                 originName={scenario.originName}
                 destinationName={scenario.destinationName}
+                onResetDemo={onResetDemo}
               />
               <window.MapLegend corridorWidthMeters={scenario.corridorWidthMeters || 100} />
             </div>
@@ -823,3 +845,95 @@ window.AdminDashboard = function({
     </div>
   );
 };
+
+/**
+ * System Status Diagnostic Panel
+ * Non-intrusive admin-only panel showing Firebase mode, map provider, and demo data status.
+ * Never exposes API keys or credential values.
+ */
+function SystemStatusPanel({ scenarios, alerts, contacts, journeyTimeline, localHelpRequests }) {
+  const firebaseBadge = (window.ConfigService && window.ConfigService.getFirebaseStatusBadge)
+    ? window.ConfigService.getFirebaseStatusBadge()
+    : { label: 'Unknown', color: '#94A3B8', bg: 'rgba(148,163,184,0.1)', detail: 'ConfigService unavailable.' };
+
+  const mapBadge = (window.ConfigService && window.ConfigService.getMapStatusBadge)
+    ? window.ConfigService.getMapStatusBadge()
+    : { label: 'Unknown', color: '#94A3B8', bg: 'rgba(148,163,184,0.1)', detail: 'ConfigService unavailable.' };
+
+  const isFirebaseLive = window.FirebaseService && window.FirebaseService.isLive && window.FirebaseService.isLive();
+  const isDemo = !isFirebaseLive;
+
+  const statusItems = [
+    { label: 'Authentication', value: isFirebaseLive ? 'Firebase Connected' : 'Demo Mode (Local Storage)', color: isFirebaseLive ? '#10B981' : '#F59E0B', icon: isFirebaseLive ? '🔥' : '⚡' },
+    { label: 'Map Provider', value: mapBadge.label, color: mapBadge.color, icon: mapBadge.mode === 'google' ? '🗺️' : '🌍' },
+    { label: 'Demo Data', value: `${scenarios.length} routes, ${alerts.length} alerts, ${contacts.length} contacts`, color: '#38BDF8', icon: '📊' },
+    { label: 'Timeline Events', value: `${journeyTimeline.length} logged`, color: '#94A3B8', icon: '📋' },
+    { label: 'Help Requests', value: `${localHelpRequests.length} active`, color: '#94A3B8', icon: '🤝' },
+    { label: 'Emergency Dispatch', value: 'SIMULATED — No real alerts sent', color: '#10B981', icon: '🛡️' },
+  ];
+
+  return (
+    <div style={{ padding: '0.5rem 0' }}>
+      {/* Firebase Mode Badge */}
+      <div style={{
+        background: firebaseBadge.bg, border: `1px solid ${firebaseBadge.color}40`,
+        borderRadius: '12px', padding: '1rem 1.25rem', marginBottom: '1.25rem',
+        display: 'flex', alignItems: 'flex-start', gap: '1rem'
+      }}>
+        <span style={{ fontSize: '1.8rem' }}>{isFirebaseLive ? '🔥' : '⚡'}</span>
+        <div>
+          <div style={{ fontWeight: '800', color: firebaseBadge.color, fontSize: '1rem', marginBottom: '0.25rem' }}>
+            {firebaseBadge.label}
+          </div>
+          <div style={{ fontSize: '0.82rem', color: '#CBD5E1', lineHeight: '1.5' }}>
+            {firebaseBadge.detail}
+          </div>
+          {isDemo && (
+            <div style={{ fontSize: '0.78rem', color: '#F59E0B', marginTop: '0.4rem', fontWeight: '700' }}>
+              &#9888; Demo accounts are stored in isolated browser localStorage. No real accounts are created.
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Map Provider Badge */}
+      <div style={{
+        background: mapBadge.bg, border: `1px solid ${mapBadge.color}40`,
+        borderRadius: '12px', padding: '1rem 1.25rem', marginBottom: '1.25rem',
+        display: 'flex', alignItems: 'flex-start', gap: '1rem'
+      }}>
+        <span style={{ fontSize: '1.8rem' }}>{mapBadge.mode === 'google' ? '🗺️' : '🌍'}</span>
+        <div>
+          <div style={{ fontWeight: '800', color: mapBadge.color, fontSize: '1rem', marginBottom: '0.25rem' }}>
+            Map Provider: {mapBadge.label}
+          </div>
+          <div style={{ fontSize: '0.82rem', color: '#CBD5E1', lineHeight: '1.5' }}>
+            {mapBadge.detail}
+          </div>
+        </div>
+      </div>
+
+      {/* Status Grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '0.75rem' }}>
+        {statusItems.map((item, i) => (
+          <div key={i} style={{
+            background: '#0F172A', border: '1px solid #1E293B', borderRadius: '10px',
+            padding: '0.85rem 1rem', display: 'flex', alignItems: 'center', gap: '0.75rem'
+          }}>
+            <span style={{ fontSize: '1.4rem' }}>{item.icon}</span>
+            <div>
+              <div style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{item.label}</div>
+              <div style={{ fontSize: '0.88rem', color: item.color, fontWeight: '700', marginTop: '2px' }}>{item.value}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Security notice */}
+      <div style={{ marginTop: '1.25rem', padding: '0.75rem 1rem', background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: '10px', fontSize: '0.78rem', color: '#6EE7B7' }}>
+        &#128274; API keys, Firebase credentials, and service account tokens are never exposed in this panel or in the browser console.
+        This panel is for competition judging transparency only.
+      </div>
+    </div>
+  );
+}

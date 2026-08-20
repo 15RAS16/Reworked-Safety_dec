@@ -10,7 +10,8 @@ window.FullScreenMap = function({
   journeyState = {},
   safeBeacon = null,
   onBack,
-  onTriggerSos
+  onTriggerSos,
+  onResetDemo = null
 }) {
   const [focused, setFocused] = React.useState(0);
   const [leftOpen, setLeftOpen] = React.useState(true);
@@ -45,9 +46,16 @@ window.FullScreenMap = function({
           <p>LIVE MONITORING</p>
           <h1>{title}</h1>
         </div>
-        <button type="button" className="srg-btn srg-btn-primary srg-btn-sm" onClick={() => setFocused(x => x + 1)}>
-          ◎ Focus User
-        </button>
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          {onResetDemo && (
+            <button type="button" className="srg-btn srg-btn-outline srg-btn-sm" onClick={onResetDemo} title="Reset map to default MMU campus scenario">
+              ↻ Reset Demo
+            </button>
+          )}
+          <button type="button" className="srg-btn srg-btn-primary srg-btn-sm" onClick={() => setFocused(x => x + 1)}>
+            ◎ Focus User
+          </button>
+        </div>
       </div>
 
       <div className="srg-full-map-canvas">
@@ -62,6 +70,7 @@ window.FullScreenMap = function({
           isDeviation={risk.distanceOffCorridor > 0}
           originName={scenario.originName || 'Start'}
           destinationName={scenario.destinationName || 'Destination'}
+          onResetDemo={onResetDemo}
         />
 
         <aside className={'srg-map-float srg-map-float-left ' + (!leftOpen ? 'collapsed' : '')}>

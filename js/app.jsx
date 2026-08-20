@@ -351,6 +351,27 @@ window.App = function() {
     }
   };
 
+  // Safe fallback if active scenario is null — defined BEFORE handleResetDemo so it's available
+  const safeActiveScenario = activeScenario || {
+    id: 'student-campus-commute',
+    travelerName: 'Aarav Sharma',
+    travelerRole: 'Engineering Student (MMU Mullana)',
+    avatar: '🎒',
+    routeName: 'MMU Main Gate → Central Library & Academic Block',
+    originName: 'MMU Main Gate (Ambala Road)',
+    destinationName: 'Engineering Academic Block 3',
+    corridorWidthMeters: 100,
+    escalationTimeoutMinutes: 15,
+    routeWaypoints: [
+      [30.2472, 77.0468],
+      [30.2485, 77.0478],
+      [30.2495, 77.0492],
+      [30.2505, 77.0505]
+    ],
+    originCoords: [30.2472, 77.0468],
+    destinationCoords: [30.2505, 77.0505]
+  };
+
   // Reset Demo to Role Default
   const handleResetDemo = () => {
     const defaultSc = (scenarios && scenarios.length > 0) ? scenarios[0] : safeActiveScenario;
@@ -373,6 +394,7 @@ window.App = function() {
     addToast('Demo scenario reset to MMU Mullana campus defaults.', 'info');
   };
 
+
   // Sign Out Handler
   const handleSignOut = async () => {
     if (window.FirebaseService && typeof window.FirebaseService.signOutUser === 'function') {
@@ -386,26 +408,7 @@ window.App = function() {
     addToast('Signed out securely.', 'info');
   };
 
-  // Safe fallback if active scenario is null
-  const safeActiveScenario = activeScenario || {
-    id: 'student-campus-commute',
-    travelerName: 'Aarav Sharma',
-    travelerRole: 'Engineering Student (MMU Mullana)',
-    avatar: '🎒',
-    routeName: 'MMU Main Gate → Central Library & Academic Block',
-    originName: 'MMU Main Gate (Ambala Road)',
-    destinationName: 'Engineering Academic Block 3',
-    corridorWidthMeters: 100,
-    escalationTimeoutMinutes: 15,
-    routeWaypoints: [
-      [30.2472, 77.0468],
-      [30.2485, 77.0478],
-      [30.2495, 77.0492],
-      [30.2505, 77.0505]
-    ],
-    originCoords: [30.2472, 77.0468],
-    destinationCoords: [30.2505, 77.0505]
-  };
+
 
   // Allowed modes for current user
   const allowedModes = (currentUser && currentUser.allowedModes) ? currentUser.allowedModes : [currentRole];

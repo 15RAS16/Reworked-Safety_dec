@@ -138,12 +138,16 @@ window.GoogleCampusMap = function({
   React.useEffect(() => {
     let isCancelled = false;
 
-    // Listen to Google Maps Auth Failures
+    // Listen to Google Maps Auth Failures — auto-switch to Leaflet immediately
     if (window.GoogleMapsService && window.GoogleMapsService.onAuthFailure) {
       window.GoogleMapsService.onAuthFailure(() => {
         if (!isCancelled) {
           setMapState('error');
           setErrorMessage('Google Maps API key is invalid, unconfigured, or restricted by domain.');
+          // Auto-switch to Leaflet fallback after short delay to show the error message briefly
+          if (onFallbackToLeaflet) {
+            setTimeout(() => { if (!isCancelled) onFallbackToLeaflet(); }, 600);
+          }
         }
       });
     }
@@ -151,7 +155,7 @@ window.GoogleCampusMap = function({
     const initMap = async () => {
       try {
         setMapState('loading');
-        
+
         if (!window.GoogleMapsService) {
           throw new Error('GoogleMapsService is unavailable.');
         }
@@ -168,7 +172,7 @@ window.GoogleCampusMap = function({
         }
 
         const mapOptions = {
-          center: (routeWaypoints && routeWaypoints.length > 0 && routeWaypoints[0]) 
+          center: (routeWaypoints && routeWaypoints.length > 0 && routeWaypoints[0])
             ? { lat: routeWaypoints[0][0], lng: routeWaypoints[0][1] }
             : defaultCampusCenter,
           zoom: 16,
@@ -196,6 +200,10 @@ window.GoogleCampusMap = function({
         console.warn('[SafeRoute Guardian] Google Maps could not load:', err.message);
         setMapState('error');
         setErrorMessage(err.message || 'Map is temporarily unavailable.');
+        // Auto-trigger Leaflet fallback after a short pause
+        if (onFallbackToLeaflet) {
+          setTimeout(() => { if (!isCancelled) onFallbackToLeaflet(); }, 350);
+        }
       }
     };
 
